@@ -1,0 +1,245 @@
+/* Style général */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    overflow: hidden;
+    background-color: #000;
+    color: #fff;
+}
+
+/* Container de l'espace */
+.space-background {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    background-image: radial-gradient(white, rgba(255, 255, 255, 0.2) 2px, transparent 2px);
+    background-size: 100px 100px;
+}
+
+#solar-system {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+}
+
+/* Corps célestes */
+.celestial-body {
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.sun {
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle at 30% 30%, #ffd700, #ff8c00);
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.8);
+    z-index: 10;
+}
+
+.earth {
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle at 30% 30%, #1E90FF, #0000CD);
+    box-shadow: 0 0 20px rgba(30, 144, 255, 0.5);
+}
+
+.moon {
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle at 30% 30%, #D3D3D3, #A9A9A9);
+    box-shadow: 0 0 5px rgba(211, 211, 211, 0.5);
+}
+
+.mars {
+    width: 25px;
+    height: 25px;
+    background: radial-gradient(circle at 30% 30%, #FF4500, #8B0000);
+    box-shadow: 0 0 15px rgba(255, 69, 0, 0.5);
+}
+
+/* Orbites */
+.orbit {
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Étiquettes */
+.label {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+/* Panneaux d'interface */
+.panel {
+    position: absolute;
+    background-color: rgba(10, 25, 50, 0.8);
+    border: 1px solid rgba(100, 150, 255, 0.5);
+    border-radius: 10px;
+    padding: 15px;
+    color: white;
+    box-shadow: 0 0 20px rgba(0, 100, 255, 0.2);
+    max-width: 350px;
+    z-index: 100;
+}
+
+.panel-title {
+    color: #FFD700;
+    margin-bottom: 10px;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+#welcome-panel {
+    top: 20px;
+    left: 20px;
+}
+
+#controls-panel {
+    bottom: 20px;
+    left: 20px;
+}
+
+#destination-panel {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+#options-panel {
+    bottom: 20px;
+    right: 20px;
+}
+
+.quick-nav {
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100px;
+}
+
+/* Boutons */
+.close-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: white;
+}
+
+.destination-buttons, .option-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.destination-btn, .option-btn, .quick-nav-btn {
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(30, 50, 100, 0.5);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.destination-btn:hover, .option-btn:hover, .quick-nav-btn:hover {
+    background-color: rgba(60, 100, 200, 0.7);
+}
+
+.sun-btn {
+    background-color: rgba(255, 150, 0, 0.5);
+}
+
+.earth-btn {
+    background-color: rgba(30, 100, 255, 0.5);
+}
+
+.moon-btn {
+    background-color: rgba(150, 150, 150, 0.5);
+}
+
+.mars-btn {
+    background-color: rgba(255, 50, 0, 0.5);
+}
+
+/* Liste de contrôles */
+#controls-panel ul {
+    list-style-type: none;
+}
+
+#controls-panel li {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.control-icon {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+/* Animation */
+@keyframes rotate {
+    from { transform: rotate(0deg) translateX(200px) rotate(0deg); }
+    to { transform: rotate(360deg) translateX(200px) rotate(-360deg); }
+}
+
+@keyframes moonRotate {
+    from { transform: rotate(0deg) translateX(40px) rotate(0deg); }
+    to { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .panel {
+        max-width: 250px;
+        padding: 10px;
+    }
+    
+    .panel-title {
+        font-size: 16px;
+    }
+    
+    .destination-btn, .option-btn, .quick-nav-btn {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+    
+    .quick-nav {
+        width: 80px;
+    }
+}
