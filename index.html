@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorateur de l'Espace</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="space-container" class="space-background">
+        <!-- Conteneur principal pour le système solaire -->
+        <div id="solar-system">
+            <!-- Le soleil -->
+            <div id="sun" class="celestial-body sun">
+                <div class="label">Soleil</div>
+            </div>
+            
+            <!-- Orbites et planètes -->
+            <div id="earth-orbit" class="orbit">
+                <div id="earth" class="celestial-body earth">
+                    <div class="label">Terre</div>
+                </div>
+                
+                <!-- Orbite de la lune -->
+                <div id="moon-orbit" class="orbit moon-orbit">
+                    <div id="moon" class="celestial-body moon">
+                        <div class="label">Lune</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Orbite de Mars -->
+            <div id="mars-orbit" class="orbit">
+                <div id="mars" class="celestial-body mars">
+                    <div class="label">Mars</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Interfaces utilisateur -->
+        <div id="ui-elements">
+            <!-- Panneau d'accueil -->
+            <div id="welcome-panel" class="panel">
+                <h2 class="panel-title">EXPLORATEUR DE L'ESPACE 🚀</h2>
+                <p>Salut jeune astronaute ! Explore notre système solaire en 3D. Utilise ta souris pour voyager entre les planètes et découvre plein de choses intéressantes !</p>
+                <button class="close-btn">×</button>
+            </div>
+            
+            <!-- Panneau de contrôles -->
+            <div id="controls-panel" class="panel">
+                <h2 class="panel-title">COMMENT JOUER</h2>
+                <ul>
+                    <li><span class="control-icon">🖱️</span> Cliquer + Glisser : Faire tourner</li>
+                    <li><span class="control-icon">🖲️</span> Molette : Zoom avant/arrière</li>
+                    <li><span class="control-icon">👆</span> Double-clic : Aller vers la planète</li>
+                </ul>
+                <button class="close-btn">×</button>
+            </div>
+            
+            <!-- Panneau de destination -->
+            <div id="destination-panel" class="panel">
+                <h2 class="panel-title">CHOISIS TA DESTINATION</h2>
+                <div class="destination-buttons">
+                    <button id="goto-sun" class="destination-btn sun-btn">Soleil ☀️</button>
+                    <button id="goto-earth" class="destination-btn earth-btn">Terre 🌍</button>
+                    <button id="goto-moon" class="destination-btn moon-btn">Lune 🌙</button>
+                    <button id="goto-mars" class="destination-btn mars-btn">Mars 🔴</button>
+                </div>
+                <button class="close-btn">×</button>
+            </div>
+            
+            <!-- Panneau d'options -->
+            <div id="options-panel" class="panel">
+                <h2 class="panel-title">OPTIONS</h2>
+                <div class="option-buttons">
+                    <button id="toggle-orbits" class="option-btn">Orbites</button>
+                    <button id="toggle-labels" class="option-btn">Noms</button>
+                    <button id="toggle-animation" class="option-btn">Animation</button>
+                </div>
+                <button class="close-btn">×</button>
+            </div>
+            
+            <!-- Menu de navigation rapide -->
+            <div id="quick-nav" class="panel quick-nav">
+                <button id="quick-sun" class="quick-nav-btn">Soleil</button>
+                <button id="quick-earth" class="quick-nav-btn">Terre</button>
+                <button id="quick-moon" class="quick-nav-btn">Lune</button>
+                <button id="quick-mars" class="quick-nav-btn">Mars</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
