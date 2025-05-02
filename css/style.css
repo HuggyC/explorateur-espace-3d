@@ -46,6 +46,20 @@ body {
     z-index: 10;
 }
 
+.mercury {
+    width: 15px;
+    height: 15px;
+    background: radial-gradient(circle at 30% 30%, #c0c0c0, #8a8a8a);
+    box-shadow: 0 0 5px rgba(192, 192, 192, 0.5);
+}
+
+.venus {
+    width: 25px;
+    height: 25px;
+    background: radial-gradient(circle at 30% 30%, #e6c98a, #b58741);
+    box-shadow: 0 0 10px rgba(230, 201, 138, 0.5);
+}
+
 .earth {
     width: 30px;
     height: 30px;
@@ -65,6 +79,49 @@ body {
     height: 25px;
     background: radial-gradient(circle at 30% 30%, #FF4500, #8B0000);
     box-shadow: 0 0 15px rgba(255, 69, 0, 0.5);
+}
+
+.jupiter {
+    width: 65px;
+    height: 65px;
+    background: radial-gradient(circle at 30% 30%, #E0B36F, #CD853F);
+    box-shadow: 0 0 25px rgba(224, 179, 111, 0.5);
+    background-image: 
+        radial-gradient(circle at 30% 30%, #E0B36F, #CD853F),
+        repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(200, 150, 100, 0.5) 10px, rgba(200, 150, 100, 0.5) 20px);
+}
+
+.saturn {
+    width: 55px;
+    height: 55px;
+    background: radial-gradient(circle at 30% 30%, #F0E68C, #DAA520);
+    box-shadow: 0 0 20px rgba(240, 230, 140, 0.5);
+}
+
+.saturn-rings {
+    position: absolute;
+    width: 120px;
+    height: 20px;
+    border-radius: 50%;
+    border: 4px solid rgba(240, 230, 140, 0.7);
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotateX(75deg);
+    box-shadow: 0 0 10px rgba(240, 230, 140, 0.3);
+}
+
+.uranus {
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle at 30% 30%, #B0E0E6, #5F9EA0);
+    box-shadow: 0 0 15px rgba(176, 224, 230, 0.5);
+}
+
+.neptune {
+    width: 38px;
+    height: 38px;
+    background: radial-gradient(circle at 30% 30%, #4169E1, #000080);
+    box-shadow: 0 0 15px rgba(65, 105, 225, 0.5);
 }
 
 /* Orbites */
@@ -133,6 +190,19 @@ body {
     right: 20px;
 }
 
+#info-panel {
+    top: 20px;
+    right: 20px;
+    display: none;
+    max-width: 300px;
+}
+
+.planet-info {
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
 .quick-nav {
     top: 50%;
     right: 20px;
@@ -180,8 +250,21 @@ body {
     background-color: rgba(60, 100, 200, 0.7);
 }
 
+.active {
+    background-color: rgba(100, 150, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
 .sun-btn {
     background-color: rgba(255, 150, 0, 0.5);
+}
+
+.mercury-btn {
+    background-color: rgba(150, 150, 150, 0.5);
+}
+
+.venus-btn {
+    background-color: rgba(230, 201, 138, 0.5);
 }
 
 .earth-btn {
@@ -194,6 +277,22 @@ body {
 
 .mars-btn {
     background-color: rgba(255, 50, 0, 0.5);
+}
+
+.jupiter-btn {
+    background-color: rgba(224, 179, 111, 0.5);
+}
+
+.saturn-btn {
+    background-color: rgba(240, 230, 140, 0.5);
+}
+
+.uranus-btn {
+    background-color: rgba(176, 224, 230, 0.5);
+}
+
+.neptune-btn {
+    background-color: rgba(65, 105, 225, 0.5);
 }
 
 /* Liste de contrôles */
@@ -241,5 +340,10 @@ body {
     
     .quick-nav {
         width: 80px;
+    }
+    
+    .destination-buttons {
+        max-height: 200px;
+        overflow-y: auto;
     }
 }
