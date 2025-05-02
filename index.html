@@ -16,6 +16,21 @@
             </div>
             
             <!-- Orbites et planètes -->
+            <!-- Mercure -->
+            <div id="mercury-orbit" class="orbit">
+                <div id="mercury" class="celestial-body mercury">
+                    <div class="label">Mercure</div>
+                </div>
+            </div>
+            
+            <!-- Vénus -->
+            <div id="venus-orbit" class="orbit">
+                <div id="venus" class="celestial-body venus">
+                    <div class="label">Vénus</div>
+                </div>
+            </div>
+            
+            <!-- Terre -->
             <div id="earth-orbit" class="orbit">
                 <div id="earth" class="celestial-body earth">
                     <div class="label">Terre</div>
@@ -29,10 +44,39 @@
                 </div>
             </div>
             
-            <!-- Orbite de Mars -->
+            <!-- Mars -->
             <div id="mars-orbit" class="orbit">
                 <div id="mars" class="celestial-body mars">
                     <div class="label">Mars</div>
+                </div>
+            </div>
+            
+            <!-- Jupiter -->
+            <div id="jupiter-orbit" class="orbit">
+                <div id="jupiter" class="celestial-body jupiter">
+                    <div class="label">Jupiter</div>
+                </div>
+            </div>
+            
+            <!-- Saturne -->
+            <div id="saturn-orbit" class="orbit">
+                <div id="saturn" class="celestial-body saturn">
+                    <div class="label">Saturne</div>
+                    <div id="saturn-rings" class="saturn-rings"></div>
+                </div>
+            </div>
+            
+            <!-- Uranus -->
+            <div id="uranus-orbit" class="orbit">
+                <div id="uranus" class="celestial-body uranus">
+                    <div class="label">Uranus</div>
+                </div>
+            </div>
+            
+            <!-- Neptune -->
+            <div id="neptune-orbit" class="orbit">
+                <div id="neptune" class="celestial-body neptune">
+                    <div class="label">Neptune</div>
                 </div>
             </div>
         </div>
@@ -62,9 +106,15 @@
                 <h2 class="panel-title">CHOISIS TA DESTINATION</h2>
                 <div class="destination-buttons">
                     <button id="goto-sun" class="destination-btn sun-btn">Soleil ☀️</button>
+                    <button id="goto-mercury" class="destination-btn mercury-btn">Mercure ☿</button>
+                    <button id="goto-venus" class="destination-btn venus-btn">Vénus ♀</button>
                     <button id="goto-earth" class="destination-btn earth-btn">Terre 🌍</button>
                     <button id="goto-moon" class="destination-btn moon-btn">Lune 🌙</button>
-                    <button id="goto-mars" class="destination-btn mars-btn">Mars 🔴</button>
+                    <button id="goto-mars" class="destination-btn mars-btn">Mars ♂</button>
+                    <button id="goto-jupiter" class="destination-btn jupiter-btn">Jupiter ♃</button>
+                    <button id="goto-saturn" class="destination-btn saturn-btn">Saturne ♄</button>
+                    <button id="goto-uranus" class="destination-btn uranus-btn">Uranus ⛢</button>
+                    <button id="goto-neptune" class="destination-btn neptune-btn">Neptune ♆</button>
                 </div>
                 <button class="close-btn">×</button>
             </div>
@@ -73,9 +123,19 @@
             <div id="options-panel" class="panel">
                 <h2 class="panel-title">OPTIONS</h2>
                 <div class="option-buttons">
-                    <button id="toggle-orbits" class="option-btn">Orbites</button>
-                    <button id="toggle-labels" class="option-btn">Noms</button>
-                    <button id="toggle-animation" class="option-btn">Animation</button>
+                    <button id="toggle-orbits" class="option-btn active">Orbites</button>
+                    <button id="toggle-labels" class="option-btn active">Noms</button>
+                    <button id="toggle-info" class="option-btn">Infos</button>
+                    <button id="toggle-animation" class="option-btn active">Animation</button>
+                </div>
+                <button class="close-btn">×</button>
+            </div>
+            
+            <!-- Panneaux d'information -->
+            <div id="info-panel" class="panel info-panel">
+                <h2 class="panel-title">INFORMATIONS</h2>
+                <div id="planet-info" class="planet-info">
+                    <p>Sélectionne une planète pour voir ses informations.</p>
                 </div>
                 <button class="close-btn">×</button>
             </div>
@@ -83,9 +143,15 @@
             <!-- Menu de navigation rapide -->
             <div id="quick-nav" class="panel quick-nav">
                 <button id="quick-sun" class="quick-nav-btn">Soleil</button>
+                <button id="quick-mercury" class="quick-nav-btn">Mercure</button>
+                <button id="quick-venus" class="quick-nav-btn">Vénus</button>
                 <button id="quick-earth" class="quick-nav-btn">Terre</button>
                 <button id="quick-moon" class="quick-nav-btn">Lune</button>
                 <button id="quick-mars" class="quick-nav-btn">Mars</button>
+                <button id="quick-jupiter" class="quick-nav-btn">Jupiter</button>
+                <button id="quick-saturn" class="quick-nav-btn">Saturne</button>
+                <button id="quick-uranus" class="quick-nav-btn">Uranus</button>
+                <button id="quick-neptune" class="quick-nav-btn">Neptune</button>
             </div>
         </div>
     </div>
