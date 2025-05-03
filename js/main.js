@@ -1,177 +1,153 @@
-// Constantes globales pour les paramètres du système solaire
-const SCALE_FACTOR = 1000; // Facteur d'échelle pour réduire les distances réelles
-const SIZE_SCALE_FACTOR = 2000; // Facteur d'échelle séparé pour les tailles des planètes
-const TIME_STEP = 0.005; // Pas de temps pour l'animation
-const ORBIT_SEGMENTS = 128; // Nombre de segments pour les orbites
-
-// Variables globales
+// Variables globales pour stocker les objets Three.js
 let scene, camera, renderer, controls;
 let planets = {};
 let orbits = [];
-let clock;
-let selectedPlanet = null;
 let animationActive = true;
-let showOrbits = true;
-let showLabels = true;
 
-// Données des planètes (distances en millions de km, diamètres en km)
+// Constantes pour le système solaire
+const DISTANCE_SCALE = 10; // Facteur d'échelle pour les distances (pour que tout rentre dans la vue)
+const SIZE_SCALE = 1; // Facteur d'échelle pour les tailles des planètes
+
+// Données des planètes avec couleurs et tailles simplifiées
 const planetData = {
-    sun: {
-        name: "Soleil",
-        diameter: 1392684,
-        distance: 0,
-        rotationPeriod: 25.05, // en jours
-        orbitalPeriod: 0, // en jours (le soleil ne tourne pas autour d'un autre objet)
+    sun: { 
+        name: "Soleil", 
+        size: 10, 
+        distance: 0, 
         color: 0xffff00,
-        info: "Le Soleil est l'étoile au centre de notre système solaire. Il représente à lui seul 99,86% de la masse du système solaire. Il est composé principalement d'hydrogène et d'hélium."
+        rotationSpeed: 0.001
     },
-    mercury: {
-        name: "Mercure",
-        diameter: 4879,
-        distance: 57.9,
-        rotationPeriod: 58.65,
-        orbitalPeriod: 87.97,
-        color: 0xbebebe,
-        info: "Mercure est la planète la plus proche du Soleil et la plus petite du système solaire. Sa surface est couverte de cratères d'impact, similaires à ceux de la Lune."
+    mercury: { 
+        name: "Mercure", 
+        size: 2, 
+        distance: 20, 
+        color: 0x888888,
+        rotationSpeed: 0.01,
+        orbitSpeed: 0.02
     },
-    venus: {
-        name: "Vénus",
-        diameter: 12104,
-        distance: 108.2,
-        rotationPeriod: -243, // rotation rétrograde
-        orbitalPeriod: 224.7,
+    venus: { 
+        name: "Vénus", 
+        size: 3, 
+        distance: 30, 
         color: 0xe39e1c,
-        info: "Vénus est la deuxième planète du système solaire et la plus chaude en raison de son effet de serre. Elle est souvent appelée 'l'étoile du berger' car elle est visible à l'œil nu à l'aube et au crépuscule."
+        rotationSpeed: 0.008,
+        orbitSpeed: 0.015
     },
-    earth: {
-        name: "Terre",
-        diameter: 12756,
-        distance: 149.6,
-        rotationPeriod: 1, // en jours
-        orbitalPeriod: 365.25, // en jours
+    earth: { 
+        name: "Terre", 
+        size: 3.5, 
+        distance: 40, 
         color: 0x0099ff,
-        info: "La Terre est la troisième planète du système solaire et la seule connue à abriter la vie. Elle est caractérisée par ses océans d'eau liquide et son atmosphère riche en oxygène."
+        rotationSpeed: 0.01,
+        orbitSpeed: 0.01,
+        moons: [
+            {
+                name: "Lune",
+                size: 1,
+                distance: 5,
+                color: 0xcccccc,
+                rotationSpeed: 0.01,
+                orbitSpeed: 0.02
+            }
+        ]
     },
-    moon: {
-        name: "Lune",
-        diameter: 3475,
-        distance: 0.384, // distance à la Terre
-        parentPlanet: 'earth', // Orbite autour de la Terre
-        parentDistance: 0.384, // 384 000 km de la Terre
-        rotationPeriod: 27.32,
-        orbitalPeriod: 27.32,
-        color: 0xdddddd,
-        info: "La Lune est le seul satellite naturel permanent de la Terre. Elle est responsable des marées et stabilise l'axe de rotation de la Terre."
+    mars: { 
+        name: "Mars", 
+        size: 3, 
+        distance: 50, 
+        color: 0xff5500,
+        rotationSpeed: 0.008,
+        orbitSpeed: 0.008
     },
-    mars: {
-        name: "Mars",
-        diameter: 6792,
-        distance: 227.9,
-        rotationPeriod: 1.03,
-        orbitalPeriod: 687,
-        color: 0xff3300,
-        info: "Mars est la quatrième planète du système solaire, surnommée 'la planète rouge' en raison de son apparence rougeâtre. Elle possède deux petites lunes, Phobos et Deimos."
+    jupiter: { 
+        name: "Jupiter", 
+        size: 7, 
+        distance: 70, 
+        color: 0xffaa88,
+        rotationSpeed: 0.004,
+        orbitSpeed: 0.004
     },
-    jupiter: {
-        name: "Jupiter",
-        diameter: 142984,
-        distance: 778.6,
-        rotationPeriod: 0.41, // 9.9 heures
-        orbitalPeriod: 4331,
-        color: 0xffaa77,
-        info: "Jupiter est la cinquième planète du système solaire et la plus grande. C'est une géante gazeuse avec une Grande Tache Rouge, une tempête qui dure depuis au moins 400 ans."
+    saturn: { 
+        name: "Saturne", 
+        size: 6, 
+        distance: 90, 
+        color: 0xddcc88,
+        rotationSpeed: 0.004,
+        orbitSpeed: 0.002,
+        hasRings: true
     },
-    saturn: {
-        name: "Saturne",
-        diameter: 120536,
-        distance: 1433.5,
-        rotationPeriod: 0.44, // 10.6 heures
-        orbitalPeriod: 10747,
-        color: 0xebe1a7,
-        info: "Saturne est la sixième planète du système solaire, célèbre pour ses anneaux spectaculaires. Elle est une géante gazeuse principalement composée d'hydrogène et d'hélium."
+    uranus: { 
+        name: "Uranus", 
+        size: 5, 
+        distance: 110, 
+        color: 0x99ffff,
+        rotationSpeed: 0.003,
+        orbitSpeed: 0.001
     },
-    uranus: {
-        name: "Uranus",
-        diameter: 51118,
-        distance: 2872.5,
-        rotationPeriod: -0.72, // rotation rétrograde, 17.24 heures
-        orbitalPeriod: 30589,
-        color: 0x77ffff,
-        info: "Uranus est la septième planète du système solaire et la première découverte à l'aide d'un télescope. Son axe de rotation est incliné de façon presque perpendiculaire à son orbite."
-    },
-    neptune: {
-        name: "Neptune",
-        diameter: 49528,
-        distance: 4495.1,
-        rotationPeriod: 0.67, // 16.1 heures
-        orbitalPeriod: 59800,
+    neptune: { 
+        name: "Neptune", 
+        size: 5, 
+        distance: 130, 
         color: 0x3333ff,
-        info: "Neptune est la huitième planète du système solaire et la plus éloignée du Soleil. C'est une géante de glace avec une Grande Tache Sombre et des vents parmi les plus rapides du système solaire."
+        rotationSpeed: 0.003,
+        orbitSpeed: 0.0005
     }
 };
 
-// Initialisation de la scène
+// Initialisation de la scène Three.js
 function init() {
-    // Initialiser l'horloge
-    clock = new THREE.Clock();
+    console.log("Initialisation du système solaire...");
     
-    // Vérifier que les éléments nécessaires existent
-    const container = document.getElementById('space-container');
-    if (!container) {
-        console.error("Conteneur 'space-container' non trouvé!");
-        return;
-    }
-
     // Créer la scène
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
-
+    
     // Créer la caméra
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-    camera.position.set(0, 300, 500);
-
-    // Créer le rendu
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 80, 80);
+    camera.lookAt(0, 0, 0);
+    
+    // Créer le renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    container.appendChild(renderer.domElement);
-
-    // Ajouter les contrôles de navigation
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+    
+    // Créer les contrôles
     controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.maxDistance = 5000;
-    controls.minDistance = 10;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-
-    // Ajouter un événement de double-clic pour centrer la caméra sur les planètes
-    renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
-
-    // Ajouter des lumières
+    
+    // Ajouter les lumières
     const ambientLight = new THREE.AmbientLight(0x333333);
     scene.add(ambientLight);
-
-    const sunLight = new THREE.PointLight(0xffffff, 2, 0, 0);
+    
+    const sunLight = new THREE.PointLight(0xffffff, 2, 300);
     sunLight.position.set(0, 0, 0);
     scene.add(sunLight);
-
-    // Créer les étoiles de fond
+    
+    // Créer le fond d'étoiles
     createStars();
-
+    
     // Créer les planètes
     createPlanets();
-
+    
     // Créer les orbites
     createOrbits();
-
-    // Initialiser l'interface utilisateur
-    connectExistingUI();
-
-    // Démarrer la boucle d'animation
+    
+    // Connecter l'interface utilisateur
+    setupUI();
+    
+    // Ajouter des gestionnaires d'événements
+    window.addEventListener('resize', onWindowResize);
+    
+    // Lancer l'animation
     animate();
     
-    console.log("Initialisation terminée, animation démarrée");
+    console.log("Initialisation terminée.");
 }
 
-// Création des étoiles de fond
+// Création du fond d'étoiles
 function createStars() {
     const starsGeometry = new THREE.BufferGeometry();
     const starsMaterial = new THREE.PointsMaterial({
@@ -179,15 +155,15 @@ function createStars() {
         size: 1,
         sizeAttenuation: false
     });
-
+    
     const starsVertices = [];
-    for (let i = 0; i < 10000; i++) {
-        const x = THREE.MathUtils.randFloatSpread(5000);
-        const y = THREE.MathUtils.randFloatSpread(5000);
-        const z = THREE.MathUtils.randFloatSpread(5000);
+    for (let i = 0; i < 2000; i++) {
+        const x = THREE.MathUtils.randFloatSpread(500);
+        const y = THREE.MathUtils.randFloatSpread(500);
+        const z = THREE.MathUtils.randFloatSpread(500);
         starsVertices.push(x, y, z);
     }
-
+    
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
     const starField = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(starField);
@@ -195,173 +171,186 @@ function createStars() {
 
 // Création des planètes
 function createPlanets() {
+    console.log("Création des planètes...");
+    
+    // Créer le soleil
+    const sunGeometry = new THREE.SphereGeometry(planetData.sun.size * SIZE_SCALE, 32, 32);
+    const sunMaterial = new THREE.MeshBasicMaterial({ color: planetData.sun.color });
+    const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+    sun.position.set(0, 0, 0);
+    scene.add(sun);
+    
+    planets.sun = {
+        mesh: sun,
+        data: planetData.sun,
+        orbit: null,
+        angle: 0
+    };
+    
+    // Créer chaque planète
     for (const key in planetData) {
+        if (key === 'sun') continue; // Le soleil est déjà créé
+        
         const data = planetData[key];
         
-        // Calcul de l'échelle avec un facteur différent pour les tailles
-        let radius;
-        if (key === 'sun') {
-            // Réduire le soleil davantage pour qu'il soit visible
-            radius = data.diameter / 2 / (SIZE_SCALE_FACTOR * 4);
-        } else if (key === 'jupiter' || key === 'saturn' || key === 'uranus' || key === 'neptune') {
-            // Réduire les géantes gazeuses pour un meilleur équilibre visuel
-            radius = data.diameter / 2 / (SIZE_SCALE_FACTOR * 2);
-        } else {
-            radius = data.diameter / 2 / SIZE_SCALE_FACTOR;
-        }
-        
-        // Vérifier que le rayon n'est pas trop petit
-        radius = Math.max(radius, 0.5);
-
-        // Création de la géométrie et du matériau
-        const geometry = new THREE.SphereGeometry(radius, 32, 32);
-        
-        // Utiliser la couleur de la planète
-        let material;
-        if (key === 'sun') {
-            // Le soleil est émissif pour qu'il brille
-            material = new THREE.MeshBasicMaterial({ 
-                color: data.color
-            });
-        } else {
-            material = new THREE.MeshPhongMaterial({ 
-                color: data.color,
-                shininess: key === 'moon' ? 10 : 30
-            });
-        }
-        
         // Créer la planète
+        const geometry = new THREE.SphereGeometry(data.size * SIZE_SCALE, 32, 32);
+        const material = new THREE.MeshPhongMaterial({ color: data.color });
         const planet = new THREE.Mesh(geometry, material);
-        planet.userData.planetId = key; // Ajouter un ID pour identifier la planète
         
-        // Positionner la planète (sera mise à jour dans updatePositions)
-        if (key === 'sun') {
-            planet.position.set(0, 0, 0);
-        } else if (data.parentPlanet) {
-            // Pour les lunes ou satellites, la position sera mise à jour dans updatePositions
-            planet.position.set(0, 0, 0);
-        } else {
-            const angle = Math.random() * Math.PI * 2;
-            const distance = data.distance / SCALE_FACTOR;
-            planet.position.set(
-                Math.cos(angle) * distance,
-                0,
-                Math.sin(angle) * distance
-            );
-        }
+        // Positionner la planète
+        const angle = Math.random() * Math.PI * 2;
+        planet.position.x = Math.cos(angle) * data.distance * DISTANCE_SCALE;
+        planet.position.z = Math.sin(angle) * data.distance * DISTANCE_SCALE;
         
-        // Ajouter la planète à la scène et à notre objet planètes
         scene.add(planet);
+        
         planets[key] = {
             mesh: planet,
             data: data,
-            angle: Math.random() * Math.PI * 2, // angle initial aléatoire
-            rotationAngle: 0
+            orbit: null,
+            angle: angle
         };
         
-        console.log(`Planète créée: ${key}`);
+        // Créer les lunes si elles existent
+        if (data.moons) {
+            data.moons.forEach((moonData, index) => {
+                const moonGeometry = new THREE.SphereGeometry(moonData.size * SIZE_SCALE, 32, 32);
+                const moonMaterial = new THREE.MeshPhongMaterial({ color: moonData.color });
+                const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+                
+                const moonAngle = Math.random() * Math.PI * 2;
+                moon.position.x = planet.position.x + Math.cos(moonAngle) * moonData.distance;
+                moon.position.z = planet.position.z + Math.sin(moonAngle) * moonData.distance;
+                
+                scene.add(moon);
+                
+                const moonKey = key + '_moon_' + index;
+                planets[moonKey] = {
+                    mesh: moon,
+                    data: moonData,
+                    parentPlanet: key,
+                    angle: moonAngle
+                };
+            });
+        }
+        
+        // Ajouter les anneaux pour Saturne
+        if (data.hasRings) {
+            const ringGeometry = new THREE.RingGeometry(
+                data.size * SIZE_SCALE * 1.5, 
+                data.size * SIZE_SCALE * 2.5, 
+                32
+            );
+            const ringMaterial = new THREE.MeshBasicMaterial({
+                color: 0xddccaa,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.6
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.rotation.x = Math.PI / 2;
+            planet.add(ring);
+        }
     }
 }
 
 // Création des orbites
 function createOrbits() {
-    // Supprimer les anciennes orbites si elles existent
-    for (const orbit of orbits) {
-        scene.remove(orbit);
-    }
-    orbits = [];
+    console.log("Création des orbites...");
     
-    // Créer les nouvelles orbites pour chaque planète
-    for (const key in planets) {
-        const planet = planets[key];
-        const data = planet.data;
+    // Créer une orbite pour chaque planète
+    for (const key in planetData) {
+        if (key === 'sun') continue; // Le soleil n'a pas d'orbite
         
-        // Ne pas créer d'orbite pour le Soleil
-        if (key === 'sun') continue;
+        const data = planetData[key];
         
-        let orbitRadius;
-        
-        if (data.parentPlanet) {
-            // Orbite autour d'une planète parente
-            orbitRadius = data.parentDistance / SCALE_FACTOR;
-        } else {
-            // Orbite autour du Soleil
-            orbitRadius = data.distance / SCALE_FACTOR;
-        }
-        
-        // Créer une orbite circulaire
-        const orbitGeometry = new THREE.RingGeometry(orbitRadius - 0.2, orbitRadius + 0.2, 64);
+        // Créer une orbite visuelle
+        const orbitGeometry = new THREE.RingGeometry(
+            data.distance * DISTANCE_SCALE - 0.1, 
+            data.distance * DISTANCE_SCALE + 0.1, 
+            64
+        );
         const orbitMaterial = new THREE.MeshBasicMaterial({
-            color: 0x888888,
+            color: 0x777777,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.5
+            opacity: 0.3
         });
-        
         const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
-        
-        // Mettre l'orbite à plat dans le plan XZ
         orbit.rotation.x = Math.PI / 2;
+        scene.add(orbit);
         
-        // Positionner l'orbite
-        if (data.parentPlanet) {
-            // Pour les lunes, l'orbite suit la planète parente
-            const parent = planets[data.parentPlanet];
-            orbit.position.copy(parent.mesh.position);
-            planet.orbit = orbit;
-        } else {
-            // Pour les planètes, l'orbite est centrée sur le soleil
-            orbit.position.set(0, 0, 0);
+        // Stocker l'orbite
+        orbits.push(orbit);
+        if (planets[key]) {
+            planets[key].orbit = orbit;
         }
         
-        orbit.visible = showOrbits;
-        scene.add(orbit);
-        orbits.push(orbit);
-        
-        console.log(`Orbite créée: ${key}, rayon: ${orbitRadius}`);
+        // Créer des orbites pour les lunes
+        if (data.moons) {
+            data.moons.forEach((moonData, index) => {
+                const moonOrbitGeometry = new THREE.RingGeometry(
+                    moonData.distance - 0.1,
+                    moonData.distance + 0.1,
+                    32
+                );
+                const moonOrbitMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x444444,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const moonOrbit = new THREE.Mesh(moonOrbitGeometry, moonOrbitMaterial);
+                moonOrbit.rotation.x = Math.PI / 2;
+                
+                const planet = planets[key].mesh;
+                moonOrbit.position.copy(planet.position);
+                scene.add(moonOrbit);
+                
+                orbits.push(moonOrbit);
+                
+                const moonKey = key + '_moon_' + index;
+                if (planets[moonKey]) {
+                    planets[moonKey].orbit = moonOrbit;
+                }
+            });
+        }
     }
 }
 
-// Mise à jour des positions des planètes
-function updatePositions() {
-    const delta = clock.getDelta();
+// Mise à jour des positions planétaires
+function updatePlanets() {
+    if (!animationActive) return;
     
+    // Mettre à jour chaque planète
     for (const key in planets) {
         const planet = planets[key];
-        const data = planet.data;
         
-        // Rotation sur elle-même
-        if (data.rotationPeriod !== 0) {
-            const rotationSpeed = (2 * Math.PI / data.rotationPeriod) * TIME_STEP;
-            planet.mesh.rotation.y += rotationSpeed;
+        // Rotation sur soi-même
+        if (planet.data.rotationSpeed) {
+            planet.mesh.rotation.y += planet.data.rotationSpeed;
         }
         
-        // Mouvement orbital (seulement si l'animation est active)
-        if (animationActive && key !== 'sun' && data.orbitalPeriod !== 0) {
-            const orbitalSpeed = (2 * Math.PI / data.orbitalPeriod) * TIME_STEP;
+        // Mouvement orbital pour les planètes (pas le soleil)
+        if (key !== 'sun' && !planet.parentPlanet && planet.data.orbitSpeed) {
+            planet.angle += planet.data.orbitSpeed;
             
-            if (data.parentPlanet) {
-                // Orbite autour d'une planète parente
-                const parent = planets[data.parentPlanet];
-                planet.angle += orbitalSpeed;
-                
-                const orbitRadius = data.parentDistance / SCALE_FACTOR;
-                planet.mesh.position.x = parent.mesh.position.x + Math.cos(planet.angle) * orbitRadius;
-                planet.mesh.position.y = parent.mesh.position.y;
-                planet.mesh.position.z = parent.mesh.position.z + Math.sin(planet.angle) * orbitRadius;
-                
-                // Mise à jour de l'orbite de la lune
-                if (planet.orbit) {
-                    planet.orbit.position.copy(parent.mesh.position);
-                }
-            } else {
-                // Orbite autour du Soleil
-                planet.angle += orbitalSpeed;
-                
-                const orbitRadius = data.distance / SCALE_FACTOR;
-                planet.mesh.position.x = Math.cos(planet.angle) * orbitRadius;
-                planet.mesh.position.y = 0;
-                planet.mesh.position.z = Math.sin(planet.angle) * orbitRadius;
+            planet.mesh.position.x = Math.cos(planet.angle) * planet.data.distance * DISTANCE_SCALE;
+            planet.mesh.position.z = Math.sin(planet.angle) * planet.data.distance * DISTANCE_SCALE;
+        }
+        
+        // Mouvement orbital pour les lunes
+        if (planet.parentPlanet && planet.data.orbitSpeed) {
+            const parentPlanet = planets[planet.parentPlanet];
+            planet.angle += planet.data.orbitSpeed;
+            
+            planet.mesh.position.x = parentPlanet.mesh.position.x + Math.cos(planet.angle) * planet.data.distance;
+            planet.mesh.position.z = parentPlanet.mesh.position.z + Math.sin(planet.angle) * planet.data.distance;
+            
+            // Mettre à jour la position de l'orbite lunaire
+            if (planet.orbit) {
+                planet.orbit.position.copy(parentPlanet.mesh.position);
             }
         }
     }
@@ -374,108 +363,9 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// Gestion du double-clic pour centrer la caméra sur une planète
-function onDoubleClick(event) {
-    event.preventDefault();
-    
-    // Calculer les coordonnées normalisées de la souris (-1 à +1)
-    const mouse = new THREE.Vector2();
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    
-    // Lancer un rayon depuis la caméra
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-    
-    // Obtenir les objets intersectés par le rayon
-    // Créer un tableau d'objets sélectionnables (uniquement les planètes)
-    const selectableObjects = [];
-    for (const key in planets) {
-        selectableObjects.push(planets[key].mesh);
-    }
-    const intersects = raycaster.intersectObjects(selectableObjects, false);
-    
-    if (intersects.length > 0) {
-        const selectedObject = intersects[0].object;
-        const planetId = selectedObject.userData.planetId;
-        
-        if (planetId) {
-            focusOnPlanet(planetId);
-            showPlanetInfo(planetId);
-        }
-    }
-}
-
-// Fonction pour se focaliser sur une planète
-function focusOnPlanet(planetId) {
-    if (!planets[planetId]) return;
-    
-    const target = planets[planetId].mesh.position.clone();
-    
-    // Animation de déplacement de la caméra
-    controls.target.copy(target);
-}
-
-// Afficher les informations d'une planète
-function showPlanetInfo(planetId) {
-    if (!planets[planetId]) return;
-    
-    const data = planets[planetId].data;
-    const infoPanel = document.getElementById('info-panel');
-    const planetInfo = document.getElementById('planet-info');
-    
-    if (!infoPanel || !planetInfo) {
-        console.error("Panneaux d'information non trouvés!");
-        return;
-    }
-    
-    // Construire le contenu HTML pour les informations
-    let factsHTML = '';
-    factsHTML += `<div><strong>Diamètre:</strong> ${data.diameter.toLocaleString()} km</div>`;
-    factsHTML += `<div><strong>Distance au Soleil:</strong> ${data.distance ? data.distance.toLocaleString() : 'N/A'} millions km</div>`;
-    factsHTML += `<div><strong>Période de rotation:</strong> ${Math.abs(data.rotationPeriod).toLocaleString()} jours${data.rotationPeriod < 0 ? ' (rétrograde)' : ''}</div>`;
-    factsHTML += `<div><strong>Période orbitale:</strong> ${data.orbitalPeriod ? data.orbitalPeriod.toLocaleString() : 'N/A'} jours</div>`;
-    
-    // Mettre à jour le contenu du panneau
-    planetInfo.innerHTML = `
-        <div class="planet-icon">${planetData[planetId].name}</div>
-        <div class="planet-facts">${factsHTML}</div>
-        <p class="planet-description">${data.info}</p>
-    `;
-    
-    // Afficher le panneau d'information
-    infoPanel.style.display = 'block';
-}
-
-// Connecter les boutons de l'interface existante
-function connectExistingUI() {
-    // Boutons de destination
-    connectPlanetButtons('goto-', focusOnPlanet);
-    connectPlanetButtons('quick-', focusOnPlanet);
-    
-    // Boutons d'options
-    const toggleOrbitsBtn = document.getElementById('toggle-orbits');
-    if (toggleOrbitsBtn) {
-        toggleOrbitsBtn.addEventListener('click', function() {
-            showOrbits = !showOrbits;
-            orbits.forEach(orbit => {
-                orbit.visible = showOrbits;
-            });
-            this.classList.toggle('active', showOrbits);
-        });
-    }
-    
-    const toggleLabelsBtn = document.getElementById('toggle-labels');
-    if (toggleLabelsBtn) {
-        toggleLabelsBtn.addEventListener('click', function() {
-            showLabels = !showLabels;
-            document.querySelectorAll('.label').forEach(label => {
-                label.style.display = showLabels ? 'block' : 'none';
-            });
-            this.classList.toggle('active', showLabels);
-        });
-    }
-    
+// Configuration de l'interface utilisateur
+function setupUI() {
+    // Configuration du bouton d'animation
     const toggleAnimationBtn = document.getElementById('toggle-animation');
     if (toggleAnimationBtn) {
         toggleAnimationBtn.addEventListener('click', function() {
@@ -484,40 +374,73 @@ function connectExistingUI() {
         });
     }
     
-    const toggleInfoBtn = document.getElementById('toggle-info');
-    if (toggleInfoBtn) {
-        toggleInfoBtn.addEventListener('click', function() {
-            const infoPanel = document.getElementById('info-panel');
-            if (infoPanel) {
-                const isVisible = infoPanel.style.display === 'block';
-                infoPanel.style.display = isVisible ? 'none' : 'block';
-                this.classList.toggle('active', !isVisible);
-            }
+    // Configuration du bouton d'orbites
+    const toggleOrbitsBtn = document.getElementById('toggle-orbits');
+    if (toggleOrbitsBtn) {
+        toggleOrbitsBtn.addEventListener('click', function() {
+            const isVisible = orbits[0].visible;
+            orbits.forEach(orbit => {
+                orbit.visible = !isVisible;
+            });
+            this.classList.toggle('active', !isVisible);
         });
     }
     
-    // Boutons de fermeture
-    document.querySelectorAll('.close-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            this.closest('.panel').style.display = 'none';
-        });
-    });
-    
-    // Gestionnaire de redimensionnement
-    window.addEventListener('resize', onWindowResize, false);
-}
-
-// Utilitaire pour connecter les boutons de planètes
-function connectPlanetButtons(prefix, callback) {
+    // Boutons pour les planètes
     for (const key in planetData) {
-        const buttonId = prefix + key;
-        const button = document.getElementById(buttonId);
-        if (button) {
-            button.addEventListener('click', () => {
-                callback(key);
-                showPlanetInfo(key);
+        const gotoButton = document.getElementById('goto-' + key);
+        if (gotoButton) {
+            gotoButton.addEventListener('click', function() {
+                focusOnPlanet(key);
             });
         }
+        
+        const quickButton = document.getElementById('quick-' + key);
+        if (quickButton) {
+            quickButton.addEventListener('click', function() {
+                focusOnPlanet(key);
+            });
+        }
+    }
+    
+    // Gérer les boutons de fermeture
+    document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const panel = this.closest('.panel');
+            if (panel) {
+                panel.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Focaliser la caméra sur une planète
+function focusOnPlanet(key) {
+    if (!planets[key]) return;
+    
+    const planet = planets[key].mesh;
+    controls.target.copy(planet.position);
+    
+    // Afficher les infos sur la planète
+    showPlanetInfo(key);
+}
+
+// Afficher les informations sur une planète
+function showPlanetInfo(key) {
+    if (!planetData[key]) return;
+    
+    const data = planetData[key];
+    const infoPanel = document.getElementById('info-panel');
+    const planetInfo = document.getElementById('planet-info');
+    
+    if (infoPanel && planetInfo) {
+        planetInfo.innerHTML = `
+            <h2>${data.name}</h2>
+            <p>Taille: ${data.size} (échelle relative)</p>
+            <p>Distance du Soleil: ${data.distance} (échelle relative)</p>
+        `;
+        
+        infoPanel.style.display = 'block';
     }
 }
 
@@ -526,19 +449,14 @@ function animate() {
     requestAnimationFrame(animate);
     
     // Mettre à jour les positions des planètes
-    updatePositions();
+    updatePlanets();
     
     // Mettre à jour les contrôles
-    if (controls) {
-        controls.update();
-    }
+    controls.update();
     
-    // Effectuer le rendu de la scène
+    // Effectuer le rendu
     renderer.render(scene, camera);
 }
 
-// Initialiser la scène au chargement
+// Lancer l'initialisation
 window.addEventListener('load', init);
-
-// Ajouter un message dans la console pour confirmer que le script est chargé
-console.log("Script du système solaire chargé");
