@@ -1,12 +1,15 @@
 // Variables globales
 let scene, camera, renderer;
-let controls; // Contrôle de la caméra
 let sunMesh, earthMesh, moonMesh, marsMesh;
 let earthOrbit, moonOrbit, marsOrbit;
 let animationActive = true;
 let showOrbits = true;
 let showLabels = true;
 let showInfo = false;
+let controls;
+
+// Importation d'OrbitControls
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/controls/OrbitControls.js';
 
 // Paramètres des orbites
 const EARTH_DISTANCE = 150;
@@ -38,7 +41,7 @@ function init() {
     camera.position.z = 300;
     
     // Ajouter les contrôles de la caméra
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enableZoom = true;
@@ -46,6 +49,7 @@ function init() {
     controls.enableRotate = true;
     controls.minDistance = 50;
     controls.maxDistance = 1000;
+    controls.target.set(0, 0, 0); // Centrer les contrôles sur l'origine
     
     // Créer les lumières
     const ambientLight = new THREE.AmbientLight(0x404040);
@@ -119,8 +123,9 @@ function init() {
 function onDoubleClick(event) {
     // Calculer la position de la souris en coordonnées normalisées
     const mouse = new THREE.Vector2();
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     
     // Créer un rayon depuis la caméra
     const raycaster = new THREE.Raycaster();
