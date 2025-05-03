@@ -112,11 +112,11 @@ function init() {
     // Initialiser les contrôles d'interface
     initUI();
     
-    // Démarrer l'animation
-    animate();
-    
     // Ajouter un gestionnaire pour le double clic
     renderer.domElement.addEventListener('dblclick', onDoubleClick);
+    
+    // Démarrer l'animation
+    animate();
 }
 
 // Fonction pour gérer le double clic
