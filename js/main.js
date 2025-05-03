@@ -20,7 +20,6 @@ const planetData = {
         rotationPeriod: 25.05, // en jours
         orbitalPeriod: 0, // en jours (le soleil ne tourne pas autour d'un autre objet)
         color: 0xffff00,
-        texture: './textures/sun.jpg',
         info: "Le Soleil est l'étoile au centre de notre système solaire. Il représente à lui seul 99,86% de la masse du système solaire. Il est composé principalement d'hydrogène et d'hélium."
     },
     mercury: {
@@ -30,7 +29,6 @@ const planetData = {
         rotationPeriod: 58.65,
         orbitalPeriod: 87.97,
         color: 0xbebebe,
-        texture: './textures/mercury.jpg',
         info: "Mercure est la planète la plus proche du Soleil et la plus petite du système solaire. Sa surface est couverte de cratères d'impact, similaires à ceux de la Lune."
     },
     venus: {
@@ -40,7 +38,6 @@ const planetData = {
         rotationPeriod: -243, // rotation rétrograde
         orbitalPeriod: 224.7,
         color: 0xe39e1c,
-        texture: './textures/venus.jpg',
         info: "Vénus est la deuxième planète du système solaire et la plus chaude en raison de son effet de serre. Elle est souvent appelée 'l'étoile du berger' car elle est visible à l'œil nu à l'aube et au crépuscule."
     },
     earth: {
@@ -50,7 +47,6 @@ const planetData = {
         rotationPeriod: 1, // en jours
         orbitalPeriod: 365.25, // en jours
         color: 0x0099ff,
-        texture: './textures/earth.jpg',
         info: "La Terre est la troisième planète du système solaire et la seule connue à abriter la vie. Elle est caractérisée par ses océans d'eau liquide et son atmosphère riche en oxygène."
     },
     moon: {
@@ -62,7 +58,6 @@ const planetData = {
         rotationPeriod: 27.32,
         orbitalPeriod: 27.32,
         color: 0xdddddd,
-        texture: './textures/moon.jpg',
         info: "La Lune est le seul satellite naturel permanent de la Terre. Elle est responsable des marées et stabilise l'axe de rotation de la Terre."
     },
     mars: {
@@ -72,7 +67,6 @@ const planetData = {
         rotationPeriod: 1.03,
         orbitalPeriod: 687,
         color: 0xff3300,
-        texture: './textures/mars.jpg',
         info: "Mars est la quatrième planète du système solaire, surnommée 'la planète rouge' en raison de son apparence rougeâtre. Elle possède deux petites lunes, Phobos et Deimos."
     },
     jupiter: {
@@ -82,7 +76,6 @@ const planetData = {
         rotationPeriod: 0.41, // 9.9 heures
         orbitalPeriod: 4331,
         color: 0xffaa77,
-        texture: './textures/jupiter.jpg',
         info: "Jupiter est la cinquième planète du système solaire et la plus grande. C'est une géante gazeuse avec une Grande Tache Rouge, une tempête qui dure depuis au moins 400 ans."
     },
     saturn: {
@@ -92,7 +85,6 @@ const planetData = {
         rotationPeriod: 0.44, // 10.6 heures
         orbitalPeriod: 10747,
         color: 0xebe1a7,
-        texture: './textures/saturn.jpg',
         info: "Saturne est la sixième planète du système solaire, célèbre pour ses anneaux spectaculaires. Elle est une géante gazeuse principalement composée d'hydrogène et d'hélium."
     },
     uranus: {
@@ -102,7 +94,6 @@ const planetData = {
         rotationPeriod: -0.72, // rotation rétrograde, 17.24 heures
         orbitalPeriod: 30589,
         color: 0x77ffff,
-        texture: './textures/uranus.jpg',
         info: "Uranus est la septième planète du système solaire et la première découverte à l'aide d'un télescope. Son axe de rotation est incliné de façon presque perpendiculaire à son orbite."
     },
     neptune: {
@@ -112,7 +103,6 @@ const planetData = {
         rotationPeriod: 0.67, // 16.1 heures
         orbitalPeriod: 59800,
         color: 0x3333ff,
-        texture: './textures/neptune.jpg',
         info: "Neptune est la huitième planète du système solaire et la plus éloignée du Soleil. C'est une géante de glace avec une Grande Tache Sombre et des vents parmi les plus rapides du système solaire."
     }
 };
@@ -130,7 +120,7 @@ function init() {
     // Créer le rendu
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    document.getElementById('space-container').appendChild(renderer.domElement);
 
     // Ajouter les contrôles de navigation
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -190,8 +180,6 @@ function createStars() {
 
 // Création des planètes
 function createPlanets() {
-    const textureLoader = new THREE.TextureLoader();
-
     for (const key in planetData) {
         const data = planetData[key];
         
@@ -200,14 +188,22 @@ function createPlanets() {
         
         // Création de la géométrie et du matériau
         const geometry = new THREE.SphereGeometry(radius, 32, 32);
-        let material;
         
-        // Si une texture est spécifiée, l'utiliser
-        if (data.texture) {
-            const texture = textureLoader.load(data.texture);
-            material = new THREE.MeshPhongMaterial({ map: texture });
+        // Utiliser la couleur de la planète
+        let material;
+        if (key === 'sun') {
+            // Le soleil est émissif pour qu'il brille
+            material = new THREE.MeshBasicMaterial({ 
+                color: data.color,
+                emissive: 0xff8800,
+            });
         } else {
-            material = new THREE.MeshPhongMaterial({ color: data.color });
+            material = new THREE.MeshPhongMaterial({ 
+                color: data.color,
+                shininess: key === 'moon' ? 10 : 30,
+                emissive: 0x112244,
+                specular: 0x444444,
+            });
         }
         
         // Créer la planète
@@ -513,7 +509,9 @@ function animate() {
     controls.update();
     
     // Mettre à jour les animations TWEEN
-    TWEEN.update();
+    if (typeof TWEEN !== 'undefined') {
+        TWEEN.update();
+    }
     
     // Effectuer le rendu de la scène
     renderer.render(scene, camera);
