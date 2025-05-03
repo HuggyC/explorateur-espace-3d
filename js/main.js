@@ -8,7 +8,7 @@ const ORBIT_SEGMENTS = 128; // Nombre de segments pour les orbites
 let scene, camera, renderer, controls;
 let planets = {};
 let orbits = [];
-let clock = new THREE.Clock();
+let clock;
 let selectedPlanet = null;
 let animationActive = true;
 let showOrbits = true;
@@ -112,6 +112,9 @@ const planetData = {
 
 // Initialisation de la scène
 function init() {
+    // Initialiser l'horloge
+    clock = new THREE.Clock();
+    
     // Vérifier que les éléments nécessaires existent
     const container = document.getElementById('space-container');
     if (!container) {
@@ -131,12 +134,6 @@ function init() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
-
-    // Vérifier que OrbitControls est disponible
-    if (typeof THREE.OrbitControls === 'undefined') {
-        console.error("THREE.OrbitControls n'est pas défini! Vérifiez l'importation de la bibliothèque.");
-        return;
-    }
 
     // Ajouter les contrôles de navigation
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -170,6 +167,8 @@ function init() {
 
     // Démarrer la boucle d'animation
     animate();
+    
+    console.log("Initialisation terminée, animation démarrée");
 }
 
 // Création des étoiles de fond
@@ -211,6 +210,9 @@ function createPlanets() {
             radius = data.diameter / 2 / SIZE_SCALE_FACTOR;
         }
         
+        // Vérifier que le rayon n'est pas trop petit
+        radius = Math.max(radius, 0.5);
+
         // Création de la géométrie et du matériau
         const geometry = new THREE.SphereGeometry(radius, 32, 32);
         
@@ -219,15 +221,12 @@ function createPlanets() {
         if (key === 'sun') {
             // Le soleil est émissif pour qu'il brille
             material = new THREE.MeshBasicMaterial({ 
-                color: data.color,
-                emissive: 0xff8800,
+                color: data.color
             });
         } else {
             material = new THREE.MeshPhongMaterial({ 
                 color: data.color,
-                shininess: key === 'moon' ? 10 : 30,
-                emissive: 0x112244,
-                specular: 0x444444,
+                shininess: key === 'moon' ? 10 : 30
             });
         }
         
@@ -259,6 +258,8 @@ function createPlanets() {
             angle: Math.random() * Math.PI * 2, // angle initial aléatoire
             rotationAngle: 0
         };
+        
+        console.log(`Planète créée: ${key}`);
     }
 }
 
@@ -279,45 +280,45 @@ function createOrbits() {
         if (key === 'sun') continue;
         
         let orbitRadius;
-        let orbitCenter = new THREE.Vector3(0, 0, 0);
         
         if (data.parentPlanet) {
             // Orbite autour d'une planète parente
             orbitRadius = data.parentDistance / SCALE_FACTOR;
-            // Le centre de l'orbite sera mis à jour dans updatePositions
         } else {
             // Orbite autour du Soleil
             orbitRadius = data.distance / SCALE_FACTOR;
         }
         
-        const orbitGeometry = new THREE.BufferGeometry();
-        const orbitMaterial = new THREE.LineBasicMaterial({
-            color: 0x444444,
+        // Créer une orbite circulaire
+        const orbitGeometry = new THREE.RingGeometry(orbitRadius - 0.2, orbitRadius + 0.2, 64);
+        const orbitMaterial = new THREE.MeshBasicMaterial({
+            color: 0x888888,
+            side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.3
+            opacity: 0.5
         });
         
-        const orbitPoints = [];
-        for (let i = 0; i <= ORBIT_SEGMENTS; i++) {
-            const angle = (i / ORBIT_SEGMENTS) * Math.PI * 2;
-            orbitPoints.push(
-                orbitRadius * Math.cos(angle) + orbitCenter.x,
-                0,
-                orbitRadius * Math.sin(angle) + orbitCenter.z
-            );
-        }
+        const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
         
-        orbitGeometry.setAttribute('position', new THREE.Float32BufferAttribute(orbitPoints, 3));
-        const orbit = new THREE.Line(orbitGeometry, orbitMaterial);
-        orbit.visible = showOrbits; // Utilise la variable globale
+        // Mettre l'orbite à plat dans le plan XZ
+        orbit.rotation.x = Math.PI / 2;
         
-        // Pour les lunes, l'orbite sera mise à jour dans updatePositions
+        // Positionner l'orbite
         if (data.parentPlanet) {
+            // Pour les lunes, l'orbite suit la planète parente
+            const parent = planets[data.parentPlanet];
+            orbit.position.copy(parent.mesh.position);
             planet.orbit = orbit;
+        } else {
+            // Pour les planètes, l'orbite est centrée sur le soleil
+            orbit.position.set(0, 0, 0);
         }
         
+        orbit.visible = showOrbits;
         scene.add(orbit);
         orbits.push(orbit);
+        
+        console.log(`Orbite créée: ${key}, rayon: ${orbitRadius}`);
     }
 }
 
@@ -351,18 +352,7 @@ function updatePositions() {
                 
                 // Mise à jour de l'orbite de la lune
                 if (planet.orbit) {
-                    const orbitPoints = [];
-                    for (let i = 0; i <= ORBIT_SEGMENTS; i++) {
-                        const angle = (i / ORBIT_SEGMENTS) * Math.PI * 2;
-                        orbitPoints.push(
-                            parent.mesh.position.x + orbitRadius * Math.cos(angle),
-                            parent.mesh.position.y,
-                            parent.mesh.position.z + orbitRadius * Math.sin(angle)
-                        );
-                    }
-                    
-                    planet.orbit.geometry.setAttribute('position', new THREE.Float32BufferAttribute(orbitPoints, 3));
-                    planet.orbit.geometry.attributes.position.needsUpdate = true;
+                    planet.orbit.position.copy(parent.mesh.position);
                 }
             } else {
                 // Orbite autour du Soleil
@@ -423,18 +413,7 @@ function focusOnPlanet(planetId) {
     const target = planets[planetId].mesh.position.clone();
     
     // Animation de déplacement de la caméra
-    if (typeof TWEEN !== 'undefined') {
-        new TWEEN.Tween(controls.target)
-            .to(target, 1000)
-            .easing(TWEEN.Easing.Cubic.InOut)
-            .start();
-    } else {
-        console.warn("TWEEN n'est pas défini, l'animation ne sera pas fluide");
-        controls.target.copy(target);
-    }
-    
-    // Mise à jour du panneau d'information
-    selectedPlanet = planetId;
+    controls.target.copy(target);
 }
 
 // Afficher les informations d'une planète
@@ -554,14 +533,12 @@ function animate() {
         controls.update();
     }
     
-    // Mettre à jour les animations TWEEN
-    if (typeof TWEEN !== 'undefined') {
-        TWEEN.update();
-    }
-    
     // Effectuer le rendu de la scène
     renderer.render(scene, camera);
 }
 
 // Initialiser la scène au chargement
-window.onload = init;
+window.addEventListener('load', init);
+
+// Ajouter un message dans la console pour confirmer que le script est chargé
+console.log("Script du système solaire chargé");
