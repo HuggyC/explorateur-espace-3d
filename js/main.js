@@ -1,15 +1,12 @@
 // Variables globales
 let scene, camera, renderer;
+let controls; // Variable globale pour les contrôles de caméra
 let sunMesh, earthMesh, moonMesh, marsMesh;
 let earthOrbit, moonOrbit, marsOrbit;
 let animationActive = true;
 let showOrbits = true;
 let showLabels = true;
 let showInfo = false;
-let controls;
-
-// Importation d'OrbitControls
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/controls/OrbitControls.js';
 
 // Paramètres des orbites
 const EARTH_DISTANCE = 150;
@@ -323,7 +320,9 @@ function animate() {
     }
     
     // Mettre à jour les contrôles
-    controls.update();
+    if (controls) {
+        controls.update();
+    }
     
     // Effectuer le rendu de la scène
     renderer.render(scene, camera);
