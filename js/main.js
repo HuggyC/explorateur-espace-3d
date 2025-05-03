@@ -1,6 +1,6 @@
 // Variables globales
 let scene, camera, renderer;
-let controls; // Contrôle de la caméra
+let controls; // Déclaration de controls comme variable globale
 let sunMesh, earthMesh, moonMesh, marsMesh;
 let earthOrbit, moonOrbit, marsOrbit;
 let animationActive = true;
@@ -41,11 +41,6 @@ function init() {
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.enableZoom = true;
-    controls.enablePan = true;
-    controls.enableRotate = true;
-    controls.minDistance = 50;
-    controls.maxDistance = 1000;
     
     // Créer les lumières
     const ambientLight = new THREE.AmbientLight(0x404040);
@@ -108,32 +103,32 @@ function init() {
     // Initialiser les contrôles d'interface
     initUI();
     
-    // Démarrer l'animation
-    animate();
-    
     // Ajouter un gestionnaire pour le double clic
     renderer.domElement.addEventListener('dblclick', onDoubleClick);
+    
+    // Démarrer l'animation
+    animate();
 }
 
 // Fonction pour gérer le double clic
 function onDoubleClick(event) {
-    // Calculer la position de la souris en coordonnées normalisées
-    const mouse = new THREE.Vector2();
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    // Calculer les coordonnées normalisées de la souris (-1 à +1)
+    const rect = renderer.domElement.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     
-    // Créer un rayon depuis la caméra
+    // Créer un rayon à partir de la caméra
     const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
+    raycaster.setFromCamera({ x, y }, camera);
     
-    // Liste des objets à tester
+    // Liste des objets pouvant être cliqués
     const objects = [sunMesh, earthMesh, moonMesh, marsMesh];
     
-    // Tester l'intersection avec les objets
+    // Vérifier les intersections
     const intersects = raycaster.intersectObjects(objects);
     
     if (intersects.length > 0) {
-        // Si un objet est cliqué, se focaliser dessus
+        // Focaliser sur le premier objet intersecté
         focusOn(intersects[0].object);
     }
 }
@@ -317,8 +312,10 @@ function animate() {
         sunMesh.rotation.y += SUN_ROTATION;
     }
     
-    // Mettre à jour les contrôles
-    controls.update();
+    // Mettre à jour les contrôles de caméra
+    if (controls) {
+        controls.update();
+    }
     
     // Effectuer le rendu de la scène
     renderer.render(scene, camera);
