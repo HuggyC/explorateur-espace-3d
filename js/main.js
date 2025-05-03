@@ -5,6 +5,7 @@ let earthOrbit, moonOrbit, marsOrbit;
 let animationActive = true;
 let showOrbits = true;
 let showLabels = true;
+let showInfo = false;
 
 // Paramètres des orbites
 const EARTH_DISTANCE = 150;
@@ -195,6 +196,7 @@ function initUI() {
     document.getElementById('toggle-orbits').addEventListener('click', toggleOrbits);
     document.getElementById('toggle-labels').addEventListener('click', toggleLabels);
     document.getElementById('toggle-animation').addEventListener('click', toggleAnimation);
+    document.getElementById('toggle-info').addEventListener('click', toggleInfo);
 }
 
 // Fonction pour se focaliser sur un objet
@@ -251,29 +253,39 @@ function toggleLabels() {
 function toggleAnimation() {
     animationActive = !animationActive;
     
-    // Changer l'apparence du bouton
+    // Mettre à jour le style du bouton
     const btn = document.getElementById('toggle-animation');
     btn.classList.toggle('active', animationActive);
 }
 
-// Animation principale
+function toggleInfo() {
+    showInfo = !showInfo;
+    const infoPanel = document.getElementById('info-panel');
+    infoPanel.style.display = showInfo ? 'block' : 'none';
+    
+    // Mettre à jour le style du bouton
+    const btn = document.getElementById('toggle-info');
+    btn.classList.toggle('active', showInfo);
+}
+
+// Fonction principale d'animation
 function animate() {
     requestAnimationFrame(animate);
     
     if (animationActive) {
-        // Mettre à jour les angles
+        // Mettre à jour les angles de rotation
         earthAngle += EARTH_SPEED;
         marsAngle += MARS_SPEED;
         moonAngle += MOON_SPEED;
         
-        // Rotation du soleil sur lui-même
-        sunMesh.rotation.y += SUN_ROTATION;
-        
         // Mettre à jour les positions
         updatePositions();
+        
+        // Faire tourner le soleil sur lui-même
+        sunMesh.rotation.y += SUN_ROTATION;
     }
     
-    // Rendu de la scène
+    // Effectuer le rendu de la scène
     renderer.render(scene, camera);
 }
 
