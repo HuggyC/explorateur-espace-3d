@@ -1,5 +1,6 @@
 // Constantes globales pour les paramètres du système solaire
 const SCALE_FACTOR = 1000; // Facteur d'échelle pour réduire les distances réelles
+const SIZE_SCALE_FACTOR = 2000; // Facteur d'échelle séparé pour les tailles des planètes
 const TIME_STEP = 0.005; // Pas de temps pour l'animation
 const ORBIT_SEGMENTS = 128; // Nombre de segments pour les orbites
 
@@ -7,9 +8,11 @@ const ORBIT_SEGMENTS = 128; // Nombre de segments pour les orbites
 let scene, camera, renderer, controls;
 let planets = {};
 let orbits = [];
-let infoPanel;
 let clock = new THREE.Clock();
 let selectedPlanet = null;
+let animationActive = true;
+let showOrbits = true;
+let showLabels = true;
 
 // Données des planètes (distances en millions de km, diamètres en km)
 const planetData = {
@@ -109,6 +112,13 @@ const planetData = {
 
 // Initialisation de la scène
 function init() {
+    // Vérifier que les éléments nécessaires existent
+    const container = document.getElementById('space-container');
+    if (!container) {
+        console.error("Conteneur 'space-container' non trouvé!");
+        return;
+    }
+
     // Créer la scène
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
@@ -120,7 +130,13 @@ function init() {
     // Créer le rendu
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('space-container').appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
+
+    // Vérifier que OrbitControls est disponible
+    if (typeof THREE.OrbitControls === 'undefined') {
+        console.error("THREE.OrbitControls n'est pas défini! Vérifiez l'importation de la bibliothèque.");
+        return;
+    }
 
     // Ajouter les contrôles de navigation
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -150,7 +166,7 @@ function init() {
     createOrbits();
 
     // Initialiser l'interface utilisateur
-    initUI();
+    connectExistingUI();
 
     // Démarrer la boucle d'animation
     animate();
@@ -183,8 +199,17 @@ function createPlanets() {
     for (const key in planetData) {
         const data = planetData[key];
         
-        // Calcul de l'échelle
-        const radius = data.diameter / 2 / SCALE_FACTOR;
+        // Calcul de l'échelle avec un facteur différent pour les tailles
+        let radius;
+        if (key === 'sun') {
+            // Réduire le soleil davantage pour qu'il soit visible
+            radius = data.diameter / 2 / (SIZE_SCALE_FACTOR * 4);
+        } else if (key === 'jupiter' || key === 'saturn' || key === 'uranus' || key === 'neptune') {
+            // Réduire les géantes gazeuses pour un meilleur équilibre visuel
+            radius = data.diameter / 2 / (SIZE_SCALE_FACTOR * 2);
+        } else {
+            radius = data.diameter / 2 / SIZE_SCALE_FACTOR;
+        }
         
         // Création de la géométrie et du matériau
         const geometry = new THREE.SphereGeometry(radius, 32, 32);
@@ -208,6 +233,7 @@ function createPlanets() {
         
         // Créer la planète
         const planet = new THREE.Mesh(geometry, material);
+        planet.userData.planetId = key; // Ajouter un ID pour identifier la planète
         
         // Positionner la planète (sera mise à jour dans updatePositions)
         if (key === 'sun') {
@@ -283,6 +309,7 @@ function createOrbits() {
         
         orbitGeometry.setAttribute('position', new THREE.Float32BufferAttribute(orbitPoints, 3));
         const orbit = new THREE.Line(orbitGeometry, orbitMaterial);
+        orbit.visible = showOrbits; // Utilise la variable globale
         
         // Pour les lunes, l'orbite sera mise à jour dans updatePositions
         if (data.parentPlanet) {
@@ -308,8 +335,8 @@ function updatePositions() {
             planet.mesh.rotation.y += rotationSpeed;
         }
         
-        // Mouvement orbital
-        if (key !== 'sun' && data.orbitalPeriod !== 0) {
+        // Mouvement orbital (seulement si l'animation est active)
+        if (animationActive && key !== 'sun' && data.orbitalPeriod !== 0) {
             const orbitalSpeed = (2 * Math.PI / data.orbitalPeriod) * TIME_STEP;
             
             if (data.parentPlanet) {
@@ -348,11 +375,6 @@ function updatePositions() {
             }
         }
     }
-    
-    // Mise à jour du panneau d'information si une planète est sélectionnée
-    if (selectedPlanet) {
-        updateInfoPanel(selectedPlanet);
-    }
 }
 
 // Redimensionnement de la fenêtre
@@ -376,126 +398,148 @@ function onDoubleClick(event) {
     raycaster.setFromCamera(mouse, camera);
     
     // Obtenir les objets intersectés par le rayon
-    const intersects = raycaster.intersectObjects(scene.children, false);
+    // Créer un tableau d'objets sélectionnables (uniquement les planètes)
+    const selectableObjects = [];
+    for (const key in planets) {
+        selectableObjects.push(planets[key].mesh);
+    }
+    const intersects = raycaster.intersectObjects(selectableObjects, false);
     
     if (intersects.length > 0) {
-        // Vérifier si l'objet intersecté est une planète
-        for (const key in planets) {
-            if (planets[key].mesh === intersects[0].object) {
-                // Centrer la caméra sur la planète
-                const target = planets[key].mesh.position.clone();
-                
-                // Animation de déplacement de la caméra
-                new TWEEN.Tween(controls.target)
-                    .to(target, 1000)
-                    .easing(TWEEN.Easing.Cubic.InOut)
-                    .start();
-                
-                // Mise à jour du panneau d'information
-                selectedPlanet = key;
-                updateInfoPanel(key);
-                
-                break;
-            }
+        const selectedObject = intersects[0].object;
+        const planetId = selectedObject.userData.planetId;
+        
+        if (planetId) {
+            focusOnPlanet(planetId);
+            showPlanetInfo(planetId);
         }
     }
 }
 
-// Initialisation de l'interface utilisateur
-function initUI() {
-    // Créer le panneau d'information
-    infoPanel = document.createElement('div');
-    infoPanel.id = 'info-panel';
-    infoPanel.style.position = 'absolute';
-    infoPanel.style.top = '20px';
-    infoPanel.style.right = '20px';
-    infoPanel.style.width = '300px';
-    infoPanel.style.padding = '20px';
-    infoPanel.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    infoPanel.style.color = 'white';
-    infoPanel.style.borderRadius = '10px';
-    infoPanel.style.display = 'none';
-    document.body.appendChild(infoPanel);
+// Fonction pour se focaliser sur une planète
+function focusOnPlanet(planetId) {
+    if (!planets[planetId]) return;
     
-    // Créer le bouton de fermeture
-    const closeButton = document.createElement('button');
-    closeButton.innerHTML = '×';
-    closeButton.style.position = 'absolute';
-    closeButton.style.right = '10px';
-    closeButton.style.top = '10px';
-    closeButton.style.backgroundColor = 'transparent';
-    closeButton.style.border = 'none';
-    closeButton.style.color = 'white';
-    closeButton.style.fontSize = '20px';
-    closeButton.style.cursor = 'pointer';
-    closeButton.onclick = function() {
-        infoPanel.style.display = 'none';
-        selectedPlanet = null;
-    };
-    infoPanel.appendChild(closeButton);
+    const target = planets[planetId].mesh.position.clone();
     
-    // Créer un menu pour sélectionner les planètes
-    const menu = document.createElement('div');
-    menu.id = 'planet-menu';
-    menu.style.position = 'absolute';
-    menu.style.top = '20px';
-    menu.style.left = '20px';
-    menu.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    menu.style.padding = '10px';
-    menu.style.borderRadius = '10px';
-    document.body.appendChild(menu);
-    
-    // Ajouter les boutons pour chaque planète
-    for (const key in planetData) {
-        const button = document.createElement('button');
-        button.innerHTML = planetData[key].name;
-        button.style.display = 'block';
-        button.style.margin = '5px';
-        button.style.padding = '5px 10px';
-        button.style.backgroundColor = '#333';
-        button.style.color = 'white';
-        button.style.border = 'none';
-        button.style.borderRadius = '5px';
-        button.style.cursor = 'pointer';
-        
-        button.onclick = function() {
-            // Centrer la caméra sur la planète
-            const target = planets[key].mesh.position.clone();
-            
-            new TWEEN.Tween(controls.target)
-                .to(target, 1000)
-                .easing(TWEEN.Easing.Cubic.InOut)
-                .start();
-            
-            // Mettre à jour le panneau d'information
-            selectedPlanet = key;
-            updateInfoPanel(key);
-        };
-        
-        menu.appendChild(button);
+    // Animation de déplacement de la caméra
+    if (typeof TWEEN !== 'undefined') {
+        new TWEEN.Tween(controls.target)
+            .to(target, 1000)
+            .easing(TWEEN.Easing.Cubic.InOut)
+            .start();
+    } else {
+        console.warn("TWEEN n'est pas défini, l'animation ne sera pas fluide");
+        controls.target.copy(target);
     }
     
-    // Ajouter gestionnaire d'événement pour le redimensionnement
+    // Mise à jour du panneau d'information
+    selectedPlanet = planetId;
+}
+
+// Afficher les informations d'une planète
+function showPlanetInfo(planetId) {
+    if (!planets[planetId]) return;
+    
+    const data = planets[planetId].data;
+    const infoPanel = document.getElementById('info-panel');
+    const planetInfo = document.getElementById('planet-info');
+    
+    if (!infoPanel || !planetInfo) {
+        console.error("Panneaux d'information non trouvés!");
+        return;
+    }
+    
+    // Construire le contenu HTML pour les informations
+    let factsHTML = '';
+    factsHTML += `<div><strong>Diamètre:</strong> ${data.diameter.toLocaleString()} km</div>`;
+    factsHTML += `<div><strong>Distance au Soleil:</strong> ${data.distance ? data.distance.toLocaleString() : 'N/A'} millions km</div>`;
+    factsHTML += `<div><strong>Période de rotation:</strong> ${Math.abs(data.rotationPeriod).toLocaleString()} jours${data.rotationPeriod < 0 ? ' (rétrograde)' : ''}</div>`;
+    factsHTML += `<div><strong>Période orbitale:</strong> ${data.orbitalPeriod ? data.orbitalPeriod.toLocaleString() : 'N/A'} jours</div>`;
+    
+    // Mettre à jour le contenu du panneau
+    planetInfo.innerHTML = `
+        <div class="planet-icon">${planetData[planetId].name}</div>
+        <div class="planet-facts">${factsHTML}</div>
+        <p class="planet-description">${data.info}</p>
+    `;
+    
+    // Afficher le panneau d'information
+    infoPanel.style.display = 'block';
+}
+
+// Connecter les boutons de l'interface existante
+function connectExistingUI() {
+    // Boutons de destination
+    connectPlanetButtons('goto-', focusOnPlanet);
+    connectPlanetButtons('quick-', focusOnPlanet);
+    
+    // Boutons d'options
+    const toggleOrbitsBtn = document.getElementById('toggle-orbits');
+    if (toggleOrbitsBtn) {
+        toggleOrbitsBtn.addEventListener('click', function() {
+            showOrbits = !showOrbits;
+            orbits.forEach(orbit => {
+                orbit.visible = showOrbits;
+            });
+            this.classList.toggle('active', showOrbits);
+        });
+    }
+    
+    const toggleLabelsBtn = document.getElementById('toggle-labels');
+    if (toggleLabelsBtn) {
+        toggleLabelsBtn.addEventListener('click', function() {
+            showLabels = !showLabels;
+            document.querySelectorAll('.label').forEach(label => {
+                label.style.display = showLabels ? 'block' : 'none';
+            });
+            this.classList.toggle('active', showLabels);
+        });
+    }
+    
+    const toggleAnimationBtn = document.getElementById('toggle-animation');
+    if (toggleAnimationBtn) {
+        toggleAnimationBtn.addEventListener('click', function() {
+            animationActive = !animationActive;
+            this.classList.toggle('active', animationActive);
+        });
+    }
+    
+    const toggleInfoBtn = document.getElementById('toggle-info');
+    if (toggleInfoBtn) {
+        toggleInfoBtn.addEventListener('click', function() {
+            const infoPanel = document.getElementById('info-panel');
+            if (infoPanel) {
+                const isVisible = infoPanel.style.display === 'block';
+                infoPanel.style.display = isVisible ? 'none' : 'block';
+                this.classList.toggle('active', !isVisible);
+            }
+        });
+    }
+    
+    // Boutons de fermeture
+    document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.panel').style.display = 'none';
+        });
+    });
+    
+    // Gestionnaire de redimensionnement
     window.addEventListener('resize', onWindowResize, false);
 }
 
-// Mise à jour du panneau d'information
-function updateInfoPanel(planetKey) {
-    const planet = planets[planetKey];
-    const data = planet.data;
-    
-    infoPanel.style.display = 'block';
-    
-    // Mise à jour du contenu
-    infoPanel.innerHTML = `
-        <button style="position:absolute;right:10px;top:10px;background:transparent;border:none;color:white;font-size:20px;cursor:pointer;" onclick="document.getElementById('info-panel').style.display='none';selectedPlanet=null;">×</button>
-        <h2>${data.name}</h2>
-        <p><strong>Diamètre:</strong> ${data.diameter.toLocaleString()} km</p>
-        <p><strong>Distance au Soleil:</strong> ${data.distance ? data.distance.toLocaleString() : 'N/A'} millions km</p>
-        <p><strong>Période de rotation:</strong> ${Math.abs(data.rotationPeriod).toLocaleString()} jours${data.rotationPeriod < 0 ? ' (rétrograde)' : ''}</p>
-        <p><strong>Période orbitale:</strong> ${data.orbitalPeriod ? data.orbitalPeriod.toLocaleString() : 'N/A'} jours</p>
-        <p>${data.info}</p>
-    `;
+// Utilitaire pour connecter les boutons de planètes
+function connectPlanetButtons(prefix, callback) {
+    for (const key in planetData) {
+        const buttonId = prefix + key;
+        const button = document.getElementById(buttonId);
+        if (button) {
+            button.addEventListener('click', () => {
+                callback(key);
+                showPlanetInfo(key);
+            });
+        }
+    }
 }
 
 // Boucle d'animation
@@ -506,7 +550,9 @@ function animate() {
     updatePositions();
     
     // Mettre à jour les contrôles
-    controls.update();
+    if (controls) {
+        controls.update();
+    }
     
     // Mettre à jour les animations TWEEN
     if (typeof TWEEN !== 'undefined') {
