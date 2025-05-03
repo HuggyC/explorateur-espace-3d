@@ -1,5 +1,6 @@
 // Variables globales
 let scene, camera, renderer;
+let controls; // Ajout de controls comme variable globale
 let sunMesh, earthMesh, moonMesh, marsMesh;
 let earthOrbit, moonOrbit, marsOrbit;
 let animationActive = true;
@@ -37,7 +38,7 @@ function init() {
     camera.position.z = 300;
     
     // Ajouter les contrôles de la caméra
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     
@@ -283,6 +284,11 @@ function animate() {
         
         // Faire tourner le soleil sur lui-même
         sunMesh.rotation.y += SUN_ROTATION;
+    }
+    
+    // Mettre à jour les contrôles de caméra
+    if (controls) {
+        controls.update();
     }
     
     // Effectuer le rendu de la scène
