@@ -41,7 +41,7 @@ function init() {
     camera.position.z = 300;
     
     // Ajouter les contrôles de la caméra
-    controls = new OrbitControls(camera, renderer.domElement);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enableZoom = true;
@@ -49,7 +49,7 @@ function init() {
     controls.enableRotate = true;
     controls.minDistance = 50;
     controls.maxDistance = 1000;
-    controls.target.set(0, 0, 0); // Centrer les contrôles sur l'origine
+    controls.target.set(0, 0, 0);
     
     // Créer les lumières
     const ambientLight = new THREE.AmbientLight(0x404040);
