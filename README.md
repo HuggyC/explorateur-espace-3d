@@ -1,205 +1,213 @@
-# Explorateur de l'Espace 3D 🚀
+# Explorateur de l'Espace 3D
 
-Un simulateur interactif du système solaire en 3D, créé avec Three.js, permettant aux utilisateurs d'explorer notre système solaire de manière immersive et éducative.
+Version française ci-dessous. English version follows.
 
-## 🌟 Fonctionnalités
+## Français
 
-- **Visualisation 3D complète** du système solaire avec toutes les planètes
-- **Navigation interactive** avec contrôles de caméra pour explorer librement
-- **Animations réalistes** des orbites planétaires
-- **Interface utilisateur intuitive** avec panneaux d'information et de contrôle
-- **Contrôles interactifs** pour afficher/masquer les orbites, étiquettes et informations
-- **Conception responsive** pour une utilisation sur différents appareils
-- **Design moderne et immersif** avec effets visuels attractifs
+Explorateur de l'Espace 3D est une petite expérience web éducative pour découvrir le système solaire. Le projet s'adresse aux élèves, aux enseignants, aux familles et aux personnes curieuses qui veulent manipuler une représentation simple en 3D.
 
-## 📋 Table des matières
+La simulation est volontairement pédagogique : les tailles, distances et vitesses sont adaptées pour rendre les astres visibles et faciles à explorer. Elle n'est pas à l'échelle réelle.
 
-- [Démo](#-démo)
-- [Technologies utilisées](#-technologies-utilisées)
-- [Installation](#-installation)
-- [Utilisation](#-utilisation)
-- [Structure du projet](#-structure-du-projet)
-- [Personnalisation](#-personnalisation)
-- [Fonctionnalités à venir](#-fonctionnalités-à-venir)
-- [Contribution](#-contribution)
-- [Licence](#-licence)
+### Démo
 
-## 🌐 Démo
+La démo publique est prévue sur GitHub Pages :
 
-Une démo en ligne du projet est disponible à l'adresse suivante : [https://huggyc.github.io/explorateur-espace-3d/](https://huggyc.github.io/explorateur-espace-3d/)
+[https://huggyc.github.io/explorateur-espace-3d/](https://huggyc.github.io/explorateur-espace-3d/)
 
-## 💻 Technologies utilisées
+### Fonctionnalités
 
-- **HTML5** - Structure de base
-- **CSS3** - Styles et animations
-- **JavaScript** - Logique et interactivité
-- **[Three.js](https://threejs.org/)** - Bibliothèque 3D WebGL
-- **[OrbitControls](https://threejs.org/docs/#examples/en/controls/OrbitControls)** - Contrôles de caméra interactifs
+- Vue 3D interactive du Soleil, des 8 planètes et de la Lune.
+- Navigation par souris : rotation, zoom et double-clic sur un astre.
+- Boutons de destination pour rejoindre rapidement chaque astre.
+- Fiches courtes avec type, diamètre, distance, période orbitale, description et fait marquant.
+- Options pour afficher ou masquer les orbites, les noms, les fiches et l'animation.
+- Interface bilingue français / anglais avec préférence conservée dans le navigateur.
+- Site statique compatible avec GitHub Pages, sans étape de build.
 
-## 🔧 Installation
+### Utilisation
 
-### Option 1: Cloner le dépôt
+- Cliquer + glisser : tourner autour du système solaire.
+- Molette : zoomer ou dézoomer.
+- Double-clic sur un astre : centrer la caméra et ouvrir sa fiche.
+- Boutons de destination : aller directement vers le Soleil, une planète ou la Lune.
+- Boutons FR / EN : changer la langue de l'interface.
+
+### Installation locale
+
+Clonez le dépôt :
 
 ```bash
-# Cloner le dépôt
 git clone https://github.com/HuggyC/explorateur-espace-3d.git
-
-# Accéder au répertoire du projet
 cd explorateur-espace-3d
-
-# Ouvrir le fichier index.html dans votre navigateur ou utiliser un serveur local
 ```
 
-### Option 2: Télécharger en tant qu'archive
-
-1. Rendez-vous sur [https://github.com/HuggyC/explorateur-espace-3d](https://github.com/HuggyC/explorateur-espace-3d)
-2. Cliquez sur le bouton "Code" puis "Download ZIP"
-3. Extrayez l'archive téléchargée
-4. Ouvrez le fichier `index.html` dans votre navigateur
-
-### Serveur local (recommandé)
-
-Pour un fonctionnement optimal, il est recommandé d'utiliser un serveur local. Vous pouvez utiliser l'une des méthodes suivantes :
+Lancez un serveur local :
 
 ```bash
-# Avec Python 3
-python -m http.server
-
-# Avec Node.js (après avoir installé http-server)
-npx http-server
+python3 -m http.server 8000
 ```
 
-## 🎮 Utilisation
+Ouvrez ensuite :
 
-### Contrôles de navigation
+[http://localhost:8000](http://localhost:8000)
 
-- **Cliquer + Glisser** : Faire tourner la vue
-- **Molette de souris** : Zoom avant/arrière
-- **Double-clic** sur un objet : Focaliser la caméra sur cet objet
+Le projet peut aussi être ouvert directement avec `index.html`, mais un serveur local reproduit mieux le comportement de GitHub Pages.
 
-### Interface utilisateur
+### Structure du projet
 
-- **Panneau d'accueil** : Introduction et présentation du simulateur
-- **Panneau de contrôles** : Instructions sur l'utilisation des contrôles
-- **Panneau de destination** : Boutons pour naviguer directement vers les planètes
-- **Panneau d'options** : Activation/désactivation des fonctionnalités visuelles
-- **Panneau d'informations** : Données sur les objets célestes sélectionnés
-- **Navigation rapide** : Accès rapide à toutes les planètes depuis le côté droit
-
-### Options configurables
-
-- **Orbites** : Afficher/masquer les trajectoires orbitales des planètes
-- **Noms** : Afficher/masquer les étiquettes des planètes
-- **Infos** : Afficher/masquer le panneau d'informations détaillées
-- **Animation** : Démarrer/arrêter le mouvement des planètes
-
-## 📁 Structure du projet
-
-```
+```text
 explorateur-espace-3d/
-├── index.html           # Page HTML principale
+├── index.html      # Structure HTML et chargement des CDN
 ├── css/
-│   └── style.css        # Styles CSS pour l'interface
+│   └── style.css   # Interface, panneaux, responsive et labels
 ├── js/
-│   └── main.js          # Script JavaScript principal avec Three.js
-├── assets/              # Ressources (textures, modèles, etc.)
-│   ├── textures/        # Textures pour les planètes
-│   └── models/          # Modèles 3D supplémentaires
-├── screenshots/         # Captures d'écran pour la documentation
-└── README.md            # Ce fichier de documentation
+│   └── main.js     # Scène Three.js, données, animation et bilingue
+├── LICENSE         # Licence MIT
+└── README.md       # Documentation FR / EN
 ```
 
-## 🎨 Personnalisation
+### Technologies
 
-### Modification des paramètres planétaires
+- HTML5
+- CSS3
+- JavaScript
+- [Three.js](https://threejs.org/)
+- OrbitControls de Three.js
+- [Tween.js](https://github.com/tweenjs/tween.js/)
 
-Vous pouvez ajuster les tailles, distances et vitesses des planètes en modifiant les constantes dans le fichier `js/main.js` :
+### Limites connues
 
-```javascript
-// Paramètres des orbites
-const EARTH_DISTANCE = 150;
-const MARS_DISTANCE = 230;
-const MOON_DISTANCE = 20;
+- La simulation n'est pas à l'échelle réelle.
+- Les trajectoires sont circulaires et simplifiées.
+- Les textures réalistes ne sont pas incluses dans cette V1.
+- Les données sont sélectionnées pour la découverte, pas pour un usage scientifique avancé.
 
-// Vitesses de rotation
-const EARTH_SPEED = 0.005;
-const MARS_SPEED = 0.003;
-const MOON_SPEED = 0.01;
-const SUN_ROTATION = 0.001;
-```
+### Idées d'évolution
 
-### Ajout de nouvelles planètes
+- Parcours guidé pour une utilisation en classe.
+- Mode quiz.
+- Textures planétaires.
+- Lunes supplémentaires.
+- Mode plein écran.
+- Meilleure accessibilité clavier.
 
-Pour ajouter de nouvelles planètes ou objets célestes :
+### Contribution
 
-1. Ajoutez les éléments HTML correspondants dans `index.html`
-2. Créez les styles CSS appropriés dans `css/style.css`
-3. Implémentez la logique JavaScript dans `js/main.js`
+Les contributions sont bienvenues si elles gardent l'objectif éducatif du projet : une expérience simple, claire et utile pour découvrir l'espace.
 
-Exemple d'ajout d'une nouvelle planète :
+Pour proposer une amélioration :
 
-```javascript
-// 1. Créer la géométrie et le matériau
-const newPlanetGeometry = new THREE.SphereGeometry(5, 32, 32);
-const newPlanetMaterial = new THREE.MeshPhongMaterial({ 
-    color: 0xaabbcc, 
-    emissive: 0x112233, 
-    specular: 0x445566,
-    shininess: 20
-});
+1. Forker le dépôt.
+2. Créer une branche dédiée.
+3. Faire les changements.
+4. Ouvrir une Pull Request avec une description claire.
 
-// 2. Créer le mesh
-newPlanetMesh = new THREE.Mesh(newPlanetGeometry, newPlanetMaterial);
-scene.add(newPlanetMesh);
+### Licence
 
-// 3. Ajouter les variables de position et vitesse
-const NEW_PLANET_DISTANCE = 300;
-const NEW_PLANET_SPEED = 0.002;
-let newPlanetAngle = 0;
-
-// 4. Mettre à jour la position dans la fonction updatePositions()
-newPlanetMesh.position.x = Math.cos(newPlanetAngle) * NEW_PLANET_DISTANCE;
-newPlanetMesh.position.z = Math.sin(newPlanetAngle) * NEW_PLANET_DISTANCE;
-
-// 5. Mettre à jour l'angle dans la fonction animate()
-newPlanetAngle += NEW_PLANET_SPEED;
-```
-
-### Personnalisation de l'interface
-
-Les styles visuels peuvent être modifiés dans le fichier `css/style.css`. Vous pouvez ajuster :
-
-- Les couleurs des planètes et orbites
-- La taille et l'apparence des panneaux d'interface
-- Les animations et transitions
-- La réactivité pour différentes tailles d'écran
-
-## 🚀 Fonctionnalités à venir
-
-- Textures HD pour toutes les planètes
-- Informations détaillées pour chaque planète
-- Ajout des lunes pour toutes les planètes
-- Modèle à l'échelle (option)
-- Mode éducatif avec parcours guidé
-- Support pour la réalité virtuelle
-- Mode plein écran
-- Fond étoilé amélioré avec constellations
-- Sauvegarde de la position de la caméra
-
-## 👥 Contribution
-
-Les contributions sont les bienvenues ! Pour contribuer :
-
-1. Fork le projet
-2. Créez votre branche de fonctionnalité (`git checkout -b feature/AmazingFeature`)
-3. Commit vos changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrez une Pull Request
-
-## 📝 Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus d'informations.
+Ce projet est publié sous licence MIT. Voir le fichier [`LICENSE`](LICENSE).
 
 ---
 
-Développé avec ❤️ par [HuggyC](https://github.com/HuggyC)
+## English
+
+3D Space Explorer is a small educational web experience for discovering the Solar System. It is designed for students, teachers, families, and curious visitors who want to manipulate a simple 3D representation.
+
+The simulation is intentionally educational: sizes, distances, and speeds are adapted to keep celestial bodies visible and easy to explore. It is not to real scale.
+
+### Demo
+
+The public demo is intended for GitHub Pages:
+
+[https://huggyc.github.io/explorateur-espace-3d/](https://huggyc.github.io/explorateur-espace-3d/)
+
+### Features
+
+- Interactive 3D view of the Sun, the 8 planets, and the Moon.
+- Mouse navigation: rotate, zoom, and double-click a body.
+- Destination buttons to quickly travel to each body.
+- Short information cards with type, diameter, distance, orbital period, description, and key fact.
+- Options to show or hide orbits, names, information cards, and animation.
+- French / English interface with browser-persisted language preference.
+- Static GitHub Pages-ready site with no build step.
+
+### Usage
+
+- Click + drag: rotate around the Solar System.
+- Mouse wheel: zoom in or out.
+- Double-click a body: center the camera and open its card.
+- Destination buttons: travel directly to the Sun, a planet, or the Moon.
+- FR / EN buttons: switch the interface language.
+
+### Local Setup
+
+Clone the repository:
+
+```bash
+git clone https://github.com/HuggyC/explorateur-espace-3d.git
+cd explorateur-espace-3d
+```
+
+Start a local server:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open:
+
+[http://localhost:8000](http://localhost:8000)
+
+The project can also be opened directly through `index.html`, but a local server better matches GitHub Pages behavior.
+
+### Project Structure
+
+```text
+explorateur-espace-3d/
+├── index.html      # HTML structure and CDN loading
+├── css/
+│   └── style.css   # UI, panels, responsive layout, and labels
+├── js/
+│   └── main.js     # Three.js scene, data, animation, and bilingual UI
+├── LICENSE         # MIT license
+└── README.md       # FR / EN documentation
+```
+
+### Technologies
+
+- HTML5
+- CSS3
+- JavaScript
+- [Three.js](https://threejs.org/)
+- Three.js OrbitControls
+- [Tween.js](https://github.com/tweenjs/tween.js/)
+
+### Known Limits
+
+- The simulation is not to real scale.
+- Orbits are circular and simplified.
+- Realistic planetary textures are not included in this V1.
+- Data is selected for discovery, not advanced scientific use.
+
+### Future Ideas
+
+- Guided classroom path.
+- Quiz mode.
+- Planet textures.
+- Additional moons.
+- Full-screen mode.
+- Better keyboard accessibility.
+
+### Contributing
+
+Contributions are welcome when they support the educational goal: a simple, clear, useful experience for discovering space.
+
+To suggest an improvement:
+
+1. Fork the repository.
+2. Create a dedicated branch.
+3. Make your changes.
+4. Open a Pull Request with a clear description.
+
+### License
+
+This project is released under the MIT License. See [`LICENSE`](LICENSE).

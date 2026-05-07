@@ -3,160 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Explorateur de l'Espace</title>
+    <meta name="description" content="Explorateur pedagogique du systeme solaire en 3D, bilingue francais et anglais.">
+    <title>Explorateur de l'Espace 3D</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="space-container" class="space-background">
-        <!-- Conteneur principal pour le système solaire -->
-        <div id="solar-system">
-            <!-- Le soleil -->
-            <div id="sun" class="celestial-body sun">
-                <div class="label">Soleil</div>
-            </div>
-            
-            <!-- Orbites et planètes -->
-            <!-- Mercure -->
-            <div id="mercury-orbit" class="orbit">
-                <div id="mercury" class="celestial-body mercury">
-                    <div class="label">Mercure</div>
+    <main id="app" class="app-shell">
+        <div id="scene-root" aria-label="Simulation 3D du systeme solaire"></div>
+        <div id="labels-layer" aria-hidden="true"></div>
+
+        <header class="top-bar" aria-label="Application">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">☉</span>
+                <div>
+                    <h1 data-i18n="appTitle">Explorateur de l'Espace 3D</h1>
+                    <p data-i18n="appSubtitle">Voyage dans le système solaire, simplement et en 3D.</p>
                 </div>
             </div>
-            
-            <!-- Vénus -->
-            <div id="venus-orbit" class="orbit">
-                <div id="venus" class="celestial-body venus">
-                    <div class="label">Vénus</div>
-                </div>
+
+            <div class="language-switcher" role="group" aria-label="Language">
+                <button type="button" class="language-btn active" data-language="fr">FR</button>
+                <button type="button" class="language-btn" data-language="en">EN</button>
             </div>
-            
-            <!-- Terre -->
-            <div id="earth-orbit" class="orbit">
-                <div id="earth" class="celestial-body earth">
-                    <div class="label">Terre</div>
-                </div>
-                
-                <!-- Orbite de la lune -->
-                <div id="moon-orbit" class="orbit moon-orbit">
-                    <div id="moon" class="celestial-body moon">
-                        <div class="label">Lune</div>
-                    </div>
-                </div>
+        </header>
+
+        <section id="welcome-panel" class="panel welcome-panel" aria-labelledby="welcome-title">
+            <button type="button" class="close-btn" data-close-panel data-i18n-aria="closePanel" aria-label="Fermer">×</button>
+            <h2 id="welcome-title" class="panel-title" data-i18n="welcomeTitle">Bienvenue</h2>
+            <p data-i18n="welcomeText">Explore les planètes, observe leurs orbites et ouvre les fiches pour découvrir les bases du système solaire.</p>
+        </section>
+
+        <section id="controls-panel" class="panel controls-panel" aria-labelledby="controls-title">
+            <button type="button" class="close-btn" data-close-panel data-i18n-aria="closePanel" aria-label="Fermer">×</button>
+            <h2 id="controls-title" class="panel-title" data-i18n="controlsTitle">Contrôles</h2>
+            <ul class="controls-list">
+                <li><span aria-hidden="true">↔</span><span data-i18n="controlRotate">Cliquer + glisser : tourner autour du système</span></li>
+                <li><span aria-hidden="true">＋</span><span data-i18n="controlZoom">Molette : zoomer ou dézoomer</span></li>
+                <li><span aria-hidden="true">◎</span><span data-i18n="controlFocus">Double-clic : rejoindre un astre</span></li>
+            </ul>
+        </section>
+
+        <section id="destination-panel" class="panel destination-panel" aria-labelledby="destination-title">
+            <h2 id="destination-title" class="panel-title" data-i18n="destinationTitle">Destinations</h2>
+            <div id="destination-list" class="destination-list"></div>
+        </section>
+
+        <section id="options-panel" class="panel options-panel" aria-labelledby="options-title">
+            <h2 id="options-title" class="panel-title" data-i18n="optionsTitle">Options</h2>
+            <div class="option-grid">
+                <button type="button" id="toggle-orbits" class="option-control active" aria-pressed="true" data-i18n="toggleOrbits">Orbites</button>
+                <button type="button" id="toggle-labels" class="option-control active" aria-pressed="true" data-i18n="toggleLabels">Noms</button>
+                <button type="button" id="toggle-info" class="option-control" aria-pressed="false" data-i18n="toggleInfo">Infos</button>
+                <button type="button" id="toggle-animation" class="option-control active" aria-pressed="true" data-i18n="toggleAnimation">Animation</button>
             </div>
-            
-            <!-- Mars -->
-            <div id="mars-orbit" class="orbit">
-                <div id="mars" class="celestial-body mars">
-                    <div class="label">Mars</div>
-                </div>
-            </div>
-            
-            <!-- Jupiter -->
-            <div id="jupiter-orbit" class="orbit">
-                <div id="jupiter" class="celestial-body jupiter">
-                    <div class="label">Jupiter</div>
-                </div>
-            </div>
-            
-            <!-- Saturne -->
-            <div id="saturn-orbit" class="orbit">
-                <div id="saturn" class="celestial-body saturn">
-                    <div class="label">Saturne</div>
-                    <div id="saturn-rings" class="saturn-rings"></div>
-                </div>
-            </div>
-            
-            <!-- Uranus -->
-            <div id="uranus-orbit" class="orbit">
-                <div id="uranus" class="celestial-body uranus">
-                    <div class="label">Uranus</div>
-                </div>
-            </div>
-            
-            <!-- Neptune -->
-            <div id="neptune-orbit" class="orbit">
-                <div id="neptune" class="celestial-body neptune">
-                    <div class="label">Neptune</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Interfaces utilisateur -->
-        <div id="ui-elements">
-            <!-- Panneau d'accueil -->
-            <div id="welcome-panel" class="panel">
-                <h2 class="panel-title">EXPLORATEUR DE L'ESPACE 🚀</h2>
-                <p>Salut jeune astronaute ! Explore notre système solaire en 3D. Utilise ta souris pour voyager entre les planètes et découvre plein de choses intéressantes !</p>
-                <button class="close-btn">×</button>
-            </div>
-            
-            <!-- Panneau de contrôles -->
-            <div id="controls-panel" class="panel">
-                <h2 class="panel-title">COMMENT JOUER</h2>
-                <ul>
-                    <li><span class="control-icon">🖱️</span> Cliquer + Glisser : Faire tourner</li>
-                    <li><span class="control-icon">🖲️</span> Molette : Zoom avant/arrière</li>
-                    <li><span class="control-icon">👆</span> Double-clic : Aller vers la planète</li>
-                </ul>
-                <button class="close-btn">×</button>
-            </div>
-            
-            <!-- Panneau de destination -->
-            <div id="destination-panel" class="panel">
-                <h2 class="panel-title">CHOISIS TA DESTINATION</h2>
-                <div class="destination-buttons">
-                    <button id="goto-sun" class="destination-btn sun-btn">Soleil ☀️</button>
-                    <button id="goto-mercury" class="destination-btn mercury-btn">Mercure ☿</button>
-                    <button id="goto-venus" class="destination-btn venus-btn">Vénus ♀</button>
-                    <button id="goto-earth" class="destination-btn earth-btn">Terre 🌍</button>
-                    <button id="goto-moon" class="destination-btn moon-btn">Lune 🌙</button>
-                    <button id="goto-mars" class="destination-btn mars-btn">Mars ♂</button>
-                    <button id="goto-jupiter" class="destination-btn jupiter-btn">Jupiter ♃</button>
-                    <button id="goto-saturn" class="destination-btn saturn-btn">Saturne ♄</button>
-                    <button id="goto-uranus" class="destination-btn uranus-btn">Uranus ⛢</button>
-                    <button id="goto-neptune" class="destination-btn neptune-btn">Neptune ♆</button>
-                </div>
-                <button class="close-btn">×</button>
-            </div>
-            
-            <!-- Panneau d'options -->
-            <div id="options-panel" class="panel">
-                <h2 class="panel-title">OPTIONS</h2>
-                <div class="option-buttons">
-                    <button id="toggle-orbits" class="option-btn active">Orbites</button>
-                    <button id="toggle-labels" class="option-btn active">Noms</button>
-                    <button id="toggle-info" class="option-btn">Infos</button>
-                    <button id="toggle-animation" class="option-btn active">Animation</button>
-                </div>
-                <button class="close-btn">×</button>
-            </div>
-            
-            <!-- Panneaux d'information -->
-            <div id="info-panel" class="panel info-panel">
-                <h2 class="panel-title">INFORMATIONS</h2>
-                <div id="planet-info" class="planet-info">
-                    <p>Sélectionne une planète pour voir ses informations.</p>
-                </div>
-                <button class="close-btn">×</button>
-            </div>
-            
-            <!-- Menu de navigation rapide -->
-            <div id="quick-nav" class="panel quick-nav">
-                <button id="quick-sun" class="quick-nav-btn">Soleil</button>
-                <button id="quick-mercury" class="quick-nav-btn">Mercure</button>
-                <button id="quick-venus" class="quick-nav-btn">Vénus</button>
-                <button id="quick-earth" class="quick-nav-btn">Terre</button>
-                <button id="quick-moon" class="quick-nav-btn">Lune</button>
-                <button id="quick-mars" class="quick-nav-btn">Mars</button>
-                <button id="quick-jupiter" class="quick-nav-btn">Jupiter</button>
-                <button id="quick-saturn" class="quick-nav-btn">Saturne</button>
-                <button id="quick-uranus" class="quick-nav-btn">Uranus</button>
-                <button id="quick-neptune" class="quick-nav-btn">Neptune</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Librairies JavaScript -->
+        </section>
+
+        <section id="info-panel" class="panel info-panel is-hidden" aria-labelledby="info-title">
+            <button type="button" class="close-btn" data-close-panel data-i18n-aria="closePanel" aria-label="Fermer">×</button>
+            <h2 id="info-title" class="panel-title" data-i18n="infoTitle">Informations</h2>
+            <div id="planet-info" class="planet-info" aria-live="polite"></div>
+        </section>
+
+        <nav id="quick-nav" class="quick-nav" aria-label="Navigation rapide"></nav>
+
+        <p class="scale-note" data-i18n="scaleNote">Représentation pédagogique, non à l'échelle.</p>
+    </main>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.min.js"></script>
