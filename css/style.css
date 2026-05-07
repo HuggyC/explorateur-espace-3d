@@ -318,6 +318,15 @@ button {
     font-size: 15px;
 }
 
+.global-view-btn {
+    border-color: rgba(105, 210, 255, 0.42);
+    background: rgba(105, 210, 255, 0.12);
+}
+
+.global-view-btn .symbol {
+    color: var(--accent-2);
+}
+
 .option-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -12,6 +12,8 @@ const BODY_SEQUENCE = [
     "uranus",
     "neptune"
 ];
+const GLOBAL_CAMERA_POSITION = { x: 0, y: 145, z: 310 };
+const GLOBAL_TARGET_POSITION = { x: 0, y: 0, z: 0 };
 
 const UI_TEXT = {
     fr: {
@@ -30,6 +32,7 @@ const UI_TEXT = {
         toggleLabels: "Noms",
         toggleInfo: "Infos",
         toggleAnimation: "Animation",
+        resetView: "Vue globale",
         infoTitle: "Informations",
         scaleNote: "Représentation pédagogique, non à l'échelle.",
         closePanel: "Fermer",
@@ -56,6 +59,7 @@ const UI_TEXT = {
         toggleLabels: "Names",
         toggleInfo: "Info",
         toggleAnimation: "Animation",
+        resetView: "Overview",
         infoTitle: "Information",
         scaleNote: "Educational representation, not to scale.",
         closePanel: "Close",
@@ -331,7 +335,7 @@ function init() {
     scene.fog = new THREE.FogExp2(0x02040a, 0.0016);
 
     camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 1600);
-    camera.position.set(0, 145, 310);
+    camera.position.set(GLOBAL_CAMERA_POSITION.x, GLOBAL_CAMERA_POSITION.y, GLOBAL_CAMERA_POSITION.z);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -343,7 +347,7 @@ function init() {
     controls.dampingFactor = 0.055;
     controls.minDistance = 18;
     controls.maxDistance = 560;
-    controls.target.set(0, 0, 0);
+    controls.target.set(GLOBAL_TARGET_POSITION.x, GLOBAL_TARGET_POSITION.y, GLOBAL_TARGET_POSITION.z);
 
     clock = new THREE.Clock();
     raycaster = new THREE.Raycaster();
@@ -543,9 +547,20 @@ function buildNavigation() {
     const destinationList = document.getElementById("destination-list");
     destinationList.innerHTML = "";
 
+    destinationList.appendChild(createGlobalViewButton());
+
     BODY_SEQUENCE.forEach((id) => {
         destinationList.appendChild(createBodyButton(id, "destination-btn"));
     });
+}
+
+function createGlobalViewButton() {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "destination-btn global-view-btn";
+    button.innerHTML = '<span class="symbol" aria-hidden="true">◎</span><span data-i18n="resetView"></span>';
+    button.addEventListener("click", resetView);
+    return button;
 }
 
 function createBodyButton(id, className) {
@@ -722,8 +737,6 @@ function focusBody(id) {
     renderInfo(id);
 
     const target = object.mesh.position.clone();
-    const startCamera = camera.position.clone();
-    const startTarget = controls.target.clone();
     const viewDistance = Math.max(object.data.visualSize * 8, id === "sun" ? 72 : 34);
     let direction = camera.position.clone().sub(controls.target);
 
@@ -734,27 +747,33 @@ function focusBody(id) {
     direction.normalize();
     const endCamera = target.clone().add(direction.multiplyScalar(viewDistance));
 
+    moveCameraTo(endCamera, target, () => {
+        startFollowingBody(pendingFollowBodyId);
+    });
+}
+
+function moveCameraTo(endCamera, endTarget, onComplete) {
+    const tweenState = {
+        cameraX: camera.position.x,
+        cameraY: camera.position.y,
+        cameraZ: camera.position.z,
+        targetX: controls.target.x,
+        targetY: controls.target.y,
+        targetZ: controls.target.z
+    };
+
     if (currentTween) {
         currentTween.stop();
     }
-
-    const tweenState = {
-        cameraX: startCamera.x,
-        cameraY: startCamera.y,
-        cameraZ: startCamera.z,
-        targetX: startTarget.x,
-        targetY: startTarget.y,
-        targetZ: startTarget.z
-    };
 
     currentTween = new TWEEN.Tween(tweenState)
         .to({
             cameraX: endCamera.x,
             cameraY: endCamera.y,
             cameraZ: endCamera.z,
-            targetX: target.x,
-            targetY: target.y,
-            targetZ: target.z
+            targetX: endTarget.x,
+            targetY: endTarget.y,
+            targetZ: endTarget.z
         }, 900)
         .easing(TWEEN.Easing.Cubic.InOut)
         .onUpdate(() => {
@@ -763,9 +782,32 @@ function focusBody(id) {
         })
         .onComplete(() => {
             currentTween = null;
-            startFollowingBody(pendingFollowBodyId);
+            camera.position.copy(endCamera);
+            controls.target.copy(endTarget);
+
+            if (onComplete) {
+                onComplete();
+            }
         })
         .start();
+}
+
+function resetView() {
+    followedBodyId = null;
+    pendingFollowBodyId = null;
+
+    const endCamera = new THREE.Vector3(
+        GLOBAL_CAMERA_POSITION.x,
+        GLOBAL_CAMERA_POSITION.y,
+        GLOBAL_CAMERA_POSITION.z
+    );
+    const endTarget = new THREE.Vector3(
+        GLOBAL_TARGET_POSITION.x,
+        GLOBAL_TARGET_POSITION.y,
+        GLOBAL_TARGET_POSITION.z
+    );
+
+    moveCameraTo(endCamera, endTarget);
 }
 
 function startFollowingBody(id) {
