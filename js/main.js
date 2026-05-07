@@ -35,6 +35,8 @@ const UI_TEXT = {
         resetView: "Vue globale",
         infoTitle: "Informations",
         scaleNote: "Représentation pédagogique, non à l'échelle.",
+        scaleHelpTrigger: "pourquoi",
+        scaleHelpText: "en vraie échelle, le Soleil serait énorme, la Terre minuscule, et les distances seraient tellement grandes que la plupart des planètes seraient invisibles ou très difficiles à explorer dans une page web",
         closePanel: "Fermer",
         diameterLabel: "Diamètre",
         distanceLabel: "Distance",
@@ -62,6 +64,8 @@ const UI_TEXT = {
         resetView: "Overview",
         infoTitle: "Information",
         scaleNote: "Educational representation, not to scale.",
+        scaleHelpTrigger: "why",
+        scaleHelpText: "at true scale, the Sun would be enormous, Earth tiny, and the distances so large that most planets would be invisible or very difficult to explore on a web page",
         closePanel: "Close",
         diameterLabel: "Diameter",
         distanceLabel: "Distance",
@@ -589,6 +593,14 @@ function setupUI() {
 
     document.querySelectorAll("[data-language]").forEach((button) => {
         button.addEventListener("click", () => setLanguage(button.dataset.language));
+    });
+
+    const scaleHelpToggle = document.getElementById("scale-help-toggle");
+    scaleHelpToggle.addEventListener("click", () => {
+        const popover = document.getElementById("scale-help-popover");
+        const isOpen = scaleHelpToggle.getAttribute("aria-expanded") === "true";
+        scaleHelpToggle.setAttribute("aria-expanded", String(!isOpen));
+        popover.classList.toggle("is-hidden", isOpen);
     });
 
     document.getElementById("toggle-orbits").addEventListener("click", () => {

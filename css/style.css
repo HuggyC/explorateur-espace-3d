@@ -426,6 +426,11 @@ button {
 .scale-note {
     left: 50%;
     top: 84px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    overflow: visible;
     max-width: min(540px, calc(100vw - 36px));
     margin: 0;
     padding: 8px 12px;
@@ -440,6 +445,42 @@ button {
     text-align: center;
     transform: translateX(-50%);
     backdrop-filter: blur(14px);
+}
+
+.scale-help-toggle {
+    border: 0;
+    padding: 0;
+    color: var(--accent-2);
+    background: transparent;
+    cursor: pointer;
+    font-size: inherit;
+    font-weight: 900;
+    line-height: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.scale-help-toggle:hover,
+.scale-help-toggle:focus-visible {
+    color: #b9edff;
+}
+
+.scale-help-popover {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 8px);
+    width: min(420px, calc(100vw - 40px));
+    padding: 12px 14px;
+    border: 1px solid rgba(105, 210, 255, 0.34);
+    border-radius: var(--radius);
+    color: var(--text);
+    background: var(--panel-strong);
+    box-shadow: var(--shadow);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+    text-align: left;
+    transform: translateX(-50%);
 }
 
 @media (max-width: 1120px) {

@@ -64,7 +64,11 @@
             <div id="planet-info" class="planet-info" aria-live="polite"></div>
         </section>
 
-        <p class="scale-note" data-i18n="scaleNote">Représentation pédagogique, non à l'échelle.</p>
+        <p class="scale-note">
+            <span data-i18n="scaleNote">Représentation pédagogique, non à l'échelle.</span>
+            <button type="button" id="scale-help-toggle" class="scale-help-toggle" aria-expanded="false" aria-controls="scale-help-popover" data-i18n="scaleHelpTrigger">pourquoi</button>
+            <span id="scale-help-popover" class="scale-help-popover is-hidden" role="tooltip" data-i18n="scaleHelpText">en vraie échelle, le Soleil serait énorme, la Terre minuscule, et les distances seraient tellement grandes que la plupart des planètes seraient invisibles ou très difficiles à explorer dans une page web</span>
+        </p>
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
