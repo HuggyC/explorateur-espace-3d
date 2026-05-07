@@ -327,6 +327,15 @@ button {
     color: var(--accent-2);
 }
 
+.align-bodies-btn {
+    border-color: rgba(255, 203, 77, 0.48);
+    background: rgba(255, 203, 77, 0.12);
+}
+
+.align-bodies-btn .symbol {
+    color: var(--accent);
+}
+
 .option-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

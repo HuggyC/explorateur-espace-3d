@@ -14,6 +14,7 @@ const BODY_SEQUENCE = [
 ];
 const GLOBAL_CAMERA_POSITION = { x: 0, y: 145, z: 310 };
 const GLOBAL_TARGET_POSITION = { x: 0, y: 0, z: 0 };
+const ALIGNMENT_ANGLE = 0;
 
 const UI_TEXT = {
     fr: {
@@ -33,6 +34,7 @@ const UI_TEXT = {
         toggleInfo: "Infos",
         toggleAnimation: "Animation",
         resetView: "Vue globale",
+        alignBodies: "Aligner",
         infoTitle: "Informations",
         scaleNote: "Représentation pédagogique, non à l'échelle.",
         scaleHelpTrigger: "pourquoi",
@@ -62,6 +64,7 @@ const UI_TEXT = {
         toggleInfo: "Info",
         toggleAnimation: "Animation",
         resetView: "Overview",
+        alignBodies: "Align",
         infoTitle: "Information",
         scaleNote: "Educational representation, not to scale.",
         scaleHelpTrigger: "why",
@@ -552,6 +555,7 @@ function buildNavigation() {
     destinationList.innerHTML = "";
 
     destinationList.appendChild(createGlobalViewButton());
+    destinationList.appendChild(createAlignBodiesButton());
 
     BODY_SEQUENCE.forEach((id) => {
         destinationList.appendChild(createBodyButton(id, "destination-btn"));
@@ -564,6 +568,15 @@ function createGlobalViewButton() {
     button.className = "destination-btn global-view-btn";
     button.innerHTML = '<span class="symbol" aria-hidden="true">◎</span><span data-i18n="resetView"></span>';
     button.addEventListener("click", resetView);
+    return button;
+}
+
+function createAlignBodiesButton() {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "destination-btn align-bodies-btn";
+    button.innerHTML = '<span class="symbol" aria-hidden="true">↔</span><span data-i18n="alignBodies"></span>';
+    button.addEventListener("click", alignBodies);
     return button;
 }
 
@@ -820,6 +833,23 @@ function resetView() {
     );
 
     moveCameraTo(endCamera, endTarget);
+}
+
+function alignBodies() {
+    animationActive = false;
+    setToggleState("toggle-animation", false);
+
+    BODY_SEQUENCE.forEach((id) => {
+        const object = bodyObjects[id];
+        if (!object || !object.data.orbitRadius) return;
+
+        object.angle = ALIGNMENT_ANGLE;
+        setBodyPosition(id);
+    });
+
+    updateOrbitPositions();
+    updateFollowedBody();
+    updateLabels();
 }
 
 function startFollowingBody(id) {
