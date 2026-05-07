@@ -309,6 +309,9 @@ let showOrbits = true;
 let showLabels = true;
 let infoVisible = false;
 let selectedBodyId = null;
+let followedBodyId = null;
+let pendingFollowBodyId = null;
+let followedBodyLastPosition;
 
 const bodyObjects = {};
 const orbitObjects = [];
@@ -345,6 +348,7 @@ function init() {
     clock = new THREE.Clock();
     raycaster = new THREE.Raycaster();
     pointer = new THREE.Vector2();
+    followedBodyLastPosition = new THREE.Vector3();
 
     createLights();
     createStarField();
@@ -537,13 +541,10 @@ function updateOrbitPositions() {
 
 function buildNavigation() {
     const destinationList = document.getElementById("destination-list");
-    const quickNav = document.getElementById("quick-nav");
     destinationList.innerHTML = "";
-    quickNav.innerHTML = "";
 
     BODY_SEQUENCE.forEach((id) => {
         destinationList.appendChild(createBodyButton(id, "destination-btn"));
-        quickNav.appendChild(createBodyButton(id, "quick-nav-btn"));
     });
 }
 
@@ -713,6 +714,8 @@ function focusBody(id) {
     if (!object) return;
 
     selectedBodyId = id;
+    followedBodyId = null;
+    pendingFollowBodyId = id;
     infoVisible = true;
     setToggleState("toggle-info", true);
     document.getElementById("info-panel").classList.remove("is-hidden");
@@ -760,8 +763,39 @@ function focusBody(id) {
         })
         .onComplete(() => {
             currentTween = null;
+            startFollowingBody(pendingFollowBodyId);
         })
         .start();
+}
+
+function startFollowingBody(id) {
+    const object = bodyObjects[id];
+    if (!object) return;
+
+    const currentPosition = object.mesh.position.clone();
+    const targetDelta = currentPosition.clone().sub(controls.target);
+
+    camera.position.add(targetDelta);
+    controls.target.copy(currentPosition);
+    followedBodyLastPosition.copy(currentPosition);
+    followedBodyId = id;
+    pendingFollowBodyId = null;
+}
+
+function updateFollowedBody() {
+    if (!followedBodyId || currentTween) return;
+
+    const object = bodyObjects[followedBodyId];
+    if (!object) return;
+
+    const currentPosition = object.mesh.position;
+    const delta = currentPosition.clone().sub(followedBodyLastPosition);
+
+    if (delta.lengthSq() > 0) {
+        camera.position.add(delta);
+        controls.target.add(delta);
+        followedBodyLastPosition.copy(currentPosition);
+    }
 }
 
 function onCanvasDoubleClick(event) {
@@ -827,6 +861,7 @@ function animate() {
         TWEEN.update();
     }
 
+    updateFollowedBody();
     controls.update();
     updateLabels();
     renderer.render(scene, camera);

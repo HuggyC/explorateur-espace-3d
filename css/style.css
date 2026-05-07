@@ -92,7 +92,6 @@ button {
 
 .top-bar,
 .panel,
-.quick-nav,
 .scale-note {
     position: fixed;
     z-index: 10;
@@ -162,7 +161,6 @@ button {
 
 .language-btn,
 .destination-btn,
-.quick-nav-btn,
 .option-control {
     border: 1px solid rgba(255, 255, 255, 0.18);
     color: var(--text);
@@ -188,7 +186,6 @@ button {
 
 .language-btn:hover,
 .destination-btn:hover,
-.quick-nav-btn:hover,
 .option-control:hover {
     transform: translateY(-1px);
     border-color: rgba(105, 210, 255, 0.65);
@@ -304,8 +301,7 @@ button {
     gap: 8px;
 }
 
-.destination-btn,
-.quick-nav-btn {
+.destination-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -317,8 +313,7 @@ button {
     font-weight: 800;
 }
 
-.destination-btn .symbol,
-.quick-nav-btn .symbol {
+.destination-btn .symbol {
     color: var(--accent);
     font-size: 15px;
 }
@@ -419,23 +414,6 @@ button {
     background: rgba(255, 203, 77, 0.1);
 }
 
-.quick-nav {
-    top: 50%;
-    right: 376px;
-    display: grid;
-    gap: 7px;
-    width: 116px;
-    transform: translateY(-50%);
-}
-
-.quick-nav-btn {
-    justify-content: flex-start;
-    min-height: 32px;
-    padding: 6px 8px;
-    background: rgba(3, 7, 14, 0.58);
-    backdrop-filter: blur(14px);
-}
-
 .scale-note {
     left: 50%;
     top: 84px;
@@ -456,10 +434,6 @@ button {
 }
 
 @media (max-width: 1120px) {
-    .quick-nav {
-        display: none;
-    }
-
     .destination-panel {
         left: 18px;
         right: 336px;
