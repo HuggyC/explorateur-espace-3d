@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Explorateur pedagogique du systeme solaire en 3D, bilingue francais et anglais.">
     <meta name="theme-color" content="#02040a">
     <title>Explorateur de l'Espace 3D</title>
@@ -81,6 +81,25 @@
             <h2 id="info-title" class="panel-title" data-i18n="infoTitle">Informations</h2>
             <div id="planet-info" class="planet-info" aria-live="polite"></div>
         </section>
+
+        <nav class="mobile-toolbar" aria-label="Menu">
+            <button type="button" id="mobile-nav-destinations" class="mobile-tab" aria-expanded="false" aria-controls="destination-panel">
+                <span class="mobile-tab-icon" aria-hidden="true">☰</span>
+                <span data-i18n="destinationTitle">Destinations</span>
+            </button>
+            <button type="button" id="mobile-nav-tour" class="mobile-tab" aria-pressed="false">
+                <span class="mobile-tab-icon" aria-hidden="true">▶</span>
+                <span id="mobile-tour-label" data-i18n="navTour">Visite</span>
+            </button>
+            <button type="button" id="mobile-nav-overview" class="mobile-tab">
+                <span class="mobile-tab-icon" aria-hidden="true">◎</span>
+                <span data-i18n="resetView">Vue globale</span>
+            </button>
+            <button type="button" id="mobile-nav-options" class="mobile-tab" aria-expanded="false" aria-controls="options-panel">
+                <span class="mobile-tab-icon" aria-hidden="true">⚙</span>
+                <span data-i18n="optionsTitle">Options</span>
+            </button>
+        </nav>
 
         <p class="scale-note">
             <span data-i18n="scaleNote">Représentation pédagogique, non à l'échelle.</span>

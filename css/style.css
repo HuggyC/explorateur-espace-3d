@@ -713,6 +713,51 @@ input:focus-visible {
 }
 
 /* ------------------------------------------------------------------ */
+/* Mobile toolbar (hidden on desktop)                                  */
+/* ------------------------------------------------------------------ */
+
+.mobile-toolbar {
+    display: none;
+    position: fixed;
+    z-index: 20;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--border);
+    background: var(--panel-strong);
+    backdrop-filter: blur(18px);
+}
+
+.mobile-tab {
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    padding: 7px 2px 6px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.mobile-tab-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.mobile-tab.active {
+    color: var(--accent);
+    background: rgba(255, 203, 77, 0.14);
+}
+
+/* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -727,22 +772,33 @@ input:focus-visible {
 }
 
 @media (max-width: 860px) {
+    html {
+        touch-action: manipulation;
+    }
+
     .top-bar {
-        top: 10px;
-        left: 10px;
-        right: 10px;
+        top: calc(8px + env(safe-area-inset-top, 0px));
+        left: 8px;
+        right: 8px;
         align-items: stretch;
-        gap: 10px;
+        gap: 8px;
     }
 
     .brand {
         min-width: 0;
         flex: 1;
-        padding: 10px;
+        padding: 7px 10px;
+        gap: 9px;
+    }
+
+    .brand-mark {
+        width: 28px;
+        height: 28px;
+        font-size: 15px;
     }
 
     .brand h1 {
-        font-size: 16px;
+        font-size: 14px;
     }
 
     .brand p,
@@ -752,121 +808,128 @@ input:focus-visible {
     }
 
     .language-switcher {
-        align-self: flex-start;
+        align-self: center;
+    }
+
+    .language-btn {
+        min-width: 36px;
+        min-height: 30px;
+        font-size: 12px;
     }
 
     .scale-note {
-        top: 74px;
-        font-size: 11px;
+        top: calc(62px + env(safe-area-inset-top, 0px));
+        max-width: calc(100vw - 16px);
+        padding: 4px 10px;
+        font-size: 10px;
+        white-space: nowrap;
     }
 
-    .info-panel {
-        top: 110px;
-        left: 10px;
-        right: 10px;
-        width: auto;
-        max-height: 34vh;
-        overflow: auto;
+    .scale-note > [data-i18n="scaleNote"] {
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .destination-panel {
-        left: 10px;
-        right: 10px;
-        bottom: 10px;
+    .mobile-toolbar {
+        display: grid;
+    }
+
+    /* Destinations & Options become bottom sheets, closed by default. */
+    .destination-panel,
+    .options-panel {
+        z-index: 14;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: calc(58px + env(safe-area-inset-bottom, 0px));
         width: auto;
         min-width: 0;
-        padding: 12px;
+        max-height: min(54vh, 400px);
+        padding: 14px 14px 12px;
+        overflow-y: auto;
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+        border-radius: 16px 16px 0 0;
+        transform: translateY(14px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: transform 220ms ease, opacity 220ms ease, visibility 220ms;
+    }
+
+    .destination-panel.is-open,
+    .options-panel.is-open {
         transform: none;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
     }
 
-    .options-panel {
-        right: 10px;
-        bottom: 190px;
-        width: min(320px, calc(100vw - 20px));
-        padding: 12px;
-    }
-
-    .option-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .option-control-wide {
-        grid-column: auto;
+    /* Info card slides up as a sheet when a body is selected. */
+    .info-panel {
+        z-index: 12;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+        width: auto;
+        max-height: 46vh;
+        padding: 14px 14px 12px;
+        overflow-y: auto;
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+        border-radius: 16px 16px 0 0;
     }
 
     .destination-list {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 6px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
     }
 
     .destination-btn {
-        min-height: 34px;
-        padding: 6px 5px;
-        font-size: 11px;
+        min-height: 42px;
+        padding: 6px 6px;
+        font-size: 12px;
+    }
+
+    .option-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
     }
 
     .option-control {
-        min-height: 34px;
+        min-height: 42px;
         font-size: 12px;
+    }
+
+    .planet-name {
+        font-size: 19px;
     }
 }
 
 @media (max-width: 520px) {
-    .top-bar {
-        flex-direction: row;
-        align-items: flex-start;
-    }
-
-    .brand {
-        width: auto;
-    }
-
     .brand h1 {
-        font-size: 15px;
+        font-size: 13px;
         overflow-wrap: anywhere;
-    }
-
-    .language-switcher {
-        align-self: flex-start;
-        margin-top: 0;
-    }
-
-    .scale-note {
-        top: 84px;
-    }
-
-    .info-panel {
-        top: 148px;
-        max-height: 40vh;
-    }
-
-    .options-panel {
-        bottom: 208px;
-    }
-
-    .option-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .option-control-wide {
-        grid-column: 1 / -1;
     }
 
     .destination-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        max-height: 132px;
-        overflow: auto;
-        padding-right: 2px;
     }
 
     .destination-btn {
         justify-content: flex-start;
-        min-height: 32px;
-        font-size: 12px;
+        padding-left: 10px;
     }
 
     .fact-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .fact-item:last-child {
+        grid-column: 1 / -1;
     }
 }
 

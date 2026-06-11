@@ -42,6 +42,8 @@ const UI_TEXT = {
         alignBodies: "Aligner",
         tourStart: "Visite guidée",
         tourStop: "Arrêter la visite",
+        navTour: "Visite",
+        navTourStop: "Stop",
         infoTitle: "Informations",
         scaleNote: "Représentation pédagogique, non à l'échelle.",
         scaleHelpTrigger: "pourquoi",
@@ -79,6 +81,8 @@ const UI_TEXT = {
         alignBodies: "Align",
         tourStart: "Guided tour",
         tourStop: "Stop the tour",
+        navTour: "Tour",
+        navTourStop: "Stop",
         infoTitle: "Information",
         scaleNote: "Educational representation, not to scale.",
         scaleHelpTrigger: "why",
@@ -665,6 +669,7 @@ function init() {
     createOrbits();
     buildNavigation();
     setupUI();
+    setupMobileUI();
     setLanguage(currentLanguage);
 
     window.addEventListener("resize", onWindowResize);
@@ -1136,6 +1141,49 @@ function setupUI() {
     }
 }
 
+function setupMobileUI() {
+    const sheets = [
+        { buttonId: "mobile-nav-destinations", panelId: "destination-panel" },
+        { buttonId: "mobile-nav-options", panelId: "options-panel" }
+    ];
+
+    sheets.forEach(({ buttonId, panelId }) => {
+        document.getElementById(buttonId).addEventListener("click", () => {
+            const panel = document.getElementById(panelId);
+            const willOpen = !panel.classList.contains("is-open");
+            closeMobileSheets();
+
+            if (willOpen) {
+                panel.classList.add("is-open");
+                const button = document.getElementById(buttonId);
+                button.classList.add("active");
+                button.setAttribute("aria-expanded", "true");
+            }
+        });
+    });
+
+    document.getElementById("mobile-nav-overview").addEventListener("click", () => {
+        closeMobileSheets();
+        resetView();
+    });
+
+    document.getElementById("mobile-nav-tour").addEventListener("click", () => {
+        closeMobileSheets();
+        toggleTour();
+    });
+}
+
+function closeMobileSheets() {
+    ["destination-panel", "options-panel"].forEach((id) => {
+        document.getElementById(id).classList.remove("is-open");
+    });
+    ["mobile-nav-destinations", "mobile-nav-options"].forEach((id) => {
+        const button = document.getElementById(id);
+        button.classList.remove("active");
+        button.setAttribute("aria-expanded", "false");
+    });
+}
+
 function updateSpeedValue() {
     const output = document.getElementById("speed-value");
     if (output) {
@@ -1261,6 +1309,8 @@ function focusBody(id, fromTour = false) {
     if (!fromTour) {
         stopTour();
     }
+
+    closeMobileSheets();
 
     selectedBodyId = id;
     followedBodyId = null;
@@ -1405,6 +1455,15 @@ function updateTourButton() {
     tourButton.querySelector(".symbol").textContent = tourActive ? "■" : "▶";
     tourButton.classList.toggle("active", tourActive);
     tourButton.setAttribute("aria-pressed", String(tourActive));
+
+    const mobileTourTab = document.getElementById("mobile-nav-tour");
+    if (mobileTourTab) {
+        mobileTourTab.classList.toggle("active", tourActive);
+        mobileTourTab.setAttribute("aria-pressed", String(tourActive));
+        mobileTourTab.querySelector(".mobile-tab-icon").textContent = tourActive ? "■" : "▶";
+        document.getElementById("mobile-tour-label").textContent =
+            UI_TEXT[currentLanguage][tourActive ? "navTourStop" : "navTour"];
+    }
 }
 
 function startFollowingBody(id) {
