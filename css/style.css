@@ -1,16 +1,17 @@
 :root {
     color-scheme: dark;
     --bg: #02040a;
-    --panel: rgba(8, 14, 24, 0.76);
-    --panel-strong: rgba(8, 14, 24, 0.92);
-    --border: rgba(165, 190, 220, 0.26);
+    --panel: rgba(9, 15, 27, 0.78);
+    --panel-strong: rgba(9, 15, 27, 0.93);
+    --border: rgba(165, 190, 220, 0.24);
     --text: #f5f8ff;
     --muted: #aeb9c8;
     --accent: #ffcb4d;
     --accent-2: #69d2ff;
+    --success: #7be0a8;
     --danger: #ff8d6b;
-    --radius: 8px;
-    --shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
+    --radius: 10px;
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.38);
 }
 
 * {
@@ -35,11 +36,27 @@ button {
     font: inherit;
 }
 
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--accent-2);
+    outline-offset: 2px;
+}
+
 .app-shell {
     position: relative;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
+}
+
+/* Subtle vignette to add depth around the scene edges. */
+.app-shell::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.4) 100%);
 }
 
 #scene-root,
@@ -87,8 +104,97 @@ button {
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
     white-space: nowrap;
     transform: translate(-50%, -100%);
-    transition: opacity 150ms ease;
+    transition: opacity 150ms ease, border-color 150ms ease, background 150ms ease;
 }
+
+.body-label.is-hovered {
+    border-color: rgba(255, 203, 77, 0.85);
+    background: rgba(54, 36, 6, 0.82);
+    color: #ffe8a6;
+}
+
+/* ------------------------------------------------------------------ */
+/* Loading screen                                                      */
+/* ------------------------------------------------------------------ */
+
+.loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 22px;
+    background: var(--bg);
+    transition: opacity 550ms ease;
+}
+
+.loading-screen.is-done {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-screen p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.loading-screen.has-error p {
+    max-width: min(420px, calc(100vw - 48px));
+    color: var(--danger);
+    text-align: center;
+    line-height: 1.5;
+}
+
+.loading-orbit {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    border: 1px dashed rgba(165, 190, 220, 0.35);
+    border-radius: 50%;
+    animation: loading-spin 2.4s linear infinite;
+}
+
+.loading-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff4aa 0%, #ffbf3f 45%, #f06b1f 100%);
+    box-shadow: 0 0 30px rgba(255, 190, 64, 0.6);
+    transform: translate(-50%, -50%);
+}
+
+.loading-satellite {
+    position: absolute;
+    left: 50%;
+    top: -5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-2);
+    box-shadow: 0 0 12px rgba(105, 210, 255, 0.8);
+    transform: translateX(-50%);
+}
+
+.loading-screen.has-error .loading-orbit {
+    animation-play-state: paused;
+}
+
+@keyframes loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Layout: top bar & panels                                            */
+/* ------------------------------------------------------------------ */
 
 .top-bar,
 .panel,
@@ -116,7 +222,7 @@ button {
     padding: 12px 14px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: rgba(3, 7, 14, 0.62);
+    background: linear-gradient(160deg, rgba(10, 18, 32, 0.72), rgba(4, 8, 16, 0.62));
     box-shadow: var(--shadow);
     backdrop-filter: blur(16px);
 }
@@ -166,7 +272,7 @@ button {
     color: var(--text);
     background: rgba(255, 255, 255, 0.08);
     cursor: pointer;
-    transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, color 140ms ease;
+    transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, color 140ms ease, box-shadow 140ms ease;
 }
 
 .language-btn {
@@ -197,7 +303,7 @@ button {
     padding: 16px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: var(--panel);
+    background: linear-gradient(165deg, rgba(11, 19, 34, 0.84), rgba(5, 9, 18, 0.78));
     box-shadow: var(--shadow);
     backdrop-filter: blur(18px);
 }
@@ -207,6 +313,7 @@ button {
     color: var(--accent);
     font-size: 15px;
     line-height: 1.15;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
 }
 
@@ -295,6 +402,10 @@ button {
     font-weight: 900;
 }
 
+/* ------------------------------------------------------------------ */
+/* Destinations                                                        */
+/* ------------------------------------------------------------------ */
+
 .destination-list {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -318,6 +429,13 @@ button {
     font-size: 15px;
 }
 
+.destination-btn.active {
+    border-color: rgba(255, 203, 77, 0.85);
+    background: rgba(255, 203, 77, 0.22);
+    color: #fff6d6;
+    box-shadow: 0 0 14px rgba(255, 203, 77, 0.25);
+}
+
 .global-view-btn {
     border-color: rgba(105, 210, 255, 0.42);
     background: rgba(105, 210, 255, 0.12);
@@ -336,6 +454,27 @@ button {
     color: var(--accent);
 }
 
+.tour-btn {
+    border-color: rgba(123, 224, 168, 0.48);
+    background: rgba(123, 224, 168, 0.12);
+}
+
+.tour-btn .symbol {
+    color: var(--success);
+    font-size: 12px;
+}
+
+.tour-btn.active {
+    border-color: rgba(123, 224, 168, 0.85);
+    background: rgba(123, 224, 168, 0.22);
+    color: #defcec;
+    box-shadow: 0 0 14px rgba(123, 224, 168, 0.25);
+}
+
+/* ------------------------------------------------------------------ */
+/* Options                                                             */
+/* ------------------------------------------------------------------ */
+
 .option-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -349,6 +488,83 @@ button {
     font-size: 13px;
     font-weight: 800;
 }
+
+.option-control-wide {
+    grid-column: 1 / -1;
+}
+
+.speed-control {
+    margin-top: 12px;
+}
+
+.speed-control label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.speed-control output {
+    min-width: 44px;
+    padding: 2px 8px;
+    border: 1px solid rgba(255, 203, 77, 0.4);
+    border-radius: 999px;
+    color: var(--accent);
+    background: rgba(255, 203, 77, 0.1);
+    font-size: 12px;
+    text-align: center;
+    text-transform: none;
+}
+
+.speed-control input[type="range"] {
+    width: 100%;
+    height: 22px;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.speed-control input[type="range"]::-webkit-slider-runnable-track {
+    height: 5px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(105, 210, 255, 0.45), rgba(255, 203, 77, 0.6));
+}
+
+.speed-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: -5.5px;
+    border: 2px solid #2d1700;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(255, 203, 77, 0.55);
+}
+
+.speed-control input[type="range"]::-moz-range-track {
+    height: 5px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(105, 210, 255, 0.45), rgba(255, 203, 77, 0.6));
+}
+
+.speed-control input[type="range"]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #2d1700;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(255, 203, 77, 0.55);
+}
+
+/* ------------------------------------------------------------------ */
+/* Info card                                                           */
+/* ------------------------------------------------------------------ */
 
 .planet-info {
     display: grid;
@@ -432,6 +648,10 @@ button {
     background: rgba(255, 203, 77, 0.1);
 }
 
+/* ------------------------------------------------------------------ */
+/* Scale note                                                          */
+/* ------------------------------------------------------------------ */
+
 .scale-note {
     left: 50%;
     top: 84px;
@@ -491,6 +711,10 @@ button {
     text-align: left;
     transform: translateX(-50%);
 }
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
 
 @media (max-width: 1120px) {
     .destination-panel {
@@ -557,9 +781,17 @@ button {
 
     .options-panel {
         right: 10px;
-        bottom: 178px;
-        width: min(300px, calc(100vw - 20px));
+        bottom: 190px;
+        width: min(320px, calc(100vw - 20px));
         padding: 12px;
+    }
+
+    .option-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .option-control-wide {
+        grid-column: auto;
     }
 
     .destination-list {
@@ -609,7 +841,15 @@ button {
     }
 
     .options-panel {
-        bottom: 196px;
+        bottom: 208px;
+    }
+
+    .option-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .option-control-wide {
+        grid-column: 1 / -1;
     }
 
     .destination-list {

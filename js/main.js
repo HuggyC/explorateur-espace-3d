@@ -15,6 +15,8 @@ const BODY_SEQUENCE = [
 const GLOBAL_CAMERA_POSITION = { x: 0, y: 145, z: 310 };
 const GLOBAL_TARGET_POSITION = { x: 0, y: 0, z: 0 };
 const ALIGNMENT_ANGLE = 0;
+const TOUR_STEP_DURATION = 8000;
+const TAU = Math.PI * 2;
 
 const UI_TEXT = {
     fr: {
@@ -26,15 +28,20 @@ const UI_TEXT = {
         controlsTitle: "Contrôles",
         controlRotate: "Cliquer + glisser : tourner autour du système",
         controlZoom: "Molette : zoomer ou dézoomer",
-        controlFocus: "Double-clic : rejoindre un astre",
+        controlFocus: "Clic sur un astre : rejoindre et ouvrir sa fiche",
+        controlKeyboard: "Flèches ← → : astre suivant · Échap : vue globale",
         destinationTitle: "Destinations",
         optionsTitle: "Options",
         toggleOrbits: "Orbites",
         toggleLabels: "Noms",
         toggleInfo: "Infos",
         toggleAnimation: "Animation",
+        toggleFullscreen: "Plein écran",
+        speedLabel: "Vitesse",
         resetView: "Vue globale",
         alignBodies: "Aligner",
+        tourStart: "Visite guidée",
+        tourStop: "Arrêter la visite",
         infoTitle: "Informations",
         scaleNote: "Représentation pédagogique, non à l'échelle.",
         scaleHelpTrigger: "pourquoi",
@@ -44,8 +51,10 @@ const UI_TEXT = {
         distanceLabel: "Distance",
         orbitLabel: "Orbite",
         funFactLabel: "À retenir",
-        initialInfo: "Choisis une destination ou double-clique sur un astre pour afficher sa fiche.",
-        languageLabel: "Langue"
+        initialInfo: "Choisis une destination ou clique sur un astre pour afficher sa fiche.",
+        languageLabel: "Langue",
+        loadingText: "Chargement du système solaire…",
+        loadErrorText: "Impossible de charger le moteur 3D. Vérifie ta connexion internet puis recharge la page."
     },
     en: {
         pageTitle: "3D Space Explorer",
@@ -56,15 +65,20 @@ const UI_TEXT = {
         controlsTitle: "Controls",
         controlRotate: "Click + drag: rotate around the system",
         controlZoom: "Mouse wheel: zoom in or out",
-        controlFocus: "Double-click: travel to a body",
+        controlFocus: "Click a body: travel to it and open its card",
+        controlKeyboard: "Arrow keys ← →: next body · Esc: overview",
         destinationTitle: "Destinations",
         optionsTitle: "Options",
         toggleOrbits: "Orbits",
         toggleLabels: "Names",
         toggleInfo: "Info",
         toggleAnimation: "Animation",
+        toggleFullscreen: "Fullscreen",
+        speedLabel: "Speed",
         resetView: "Overview",
         alignBodies: "Align",
+        tourStart: "Guided tour",
+        tourStop: "Stop the tour",
         infoTitle: "Information",
         scaleNote: "Educational representation, not to scale.",
         scaleHelpTrigger: "why",
@@ -74,8 +88,10 @@ const UI_TEXT = {
         distanceLabel: "Distance",
         orbitLabel: "Orbit",
         funFactLabel: "Key fact",
-        initialInfo: "Choose a destination or double-click a body to open its card.",
-        languageLabel: "Language"
+        initialInfo: "Choose a destination or click a body to open its card.",
+        languageLabel: "Language",
+        loadingText: "Loading the Solar System…",
+        loadErrorText: "Could not load the 3D engine. Check your internet connection and reload the page."
     }
 };
 
@@ -88,6 +104,7 @@ const bodies = {
         orbitRadius: 0,
         rotationSpeed: 0.002,
         initialAngle: 0,
+        tilt: 0,
         type: { fr: "Étoile", en: "Star" },
         name: { fr: "Soleil", en: "Sun" },
         diameter: { fr: "1 392 700 km", en: "1,392,700 km" },
@@ -110,6 +127,7 @@ const bodies = {
         rotationSpeed: 0.004,
         orbitSpeed: 0.008,
         initialAngle: 0.4,
+        tilt: 0.001,
         type: { fr: "Planète rocheuse", en: "Rocky planet" },
         name: { fr: "Mercure", en: "Mercury" },
         diameter: { fr: "4 879 km", en: "4,879 km" },
@@ -132,6 +150,8 @@ const bodies = {
         rotationSpeed: 0.0015,
         orbitSpeed: 0.006,
         initialAngle: 1.5,
+        tilt: 0.05,
+        hasAtmosphere: { color: 0xe8c87a, opacity: 0.14 },
         type: { fr: "Planète rocheuse", en: "Rocky planet" },
         name: { fr: "Vénus", en: "Venus" },
         diameter: { fr: "12 104 km", en: "12,104 km" },
@@ -154,6 +174,9 @@ const bodies = {
         rotationSpeed: 0.01,
         orbitSpeed: 0.005,
         initialAngle: 2.6,
+        tilt: 0.41,
+        hasClouds: true,
+        hasAtmosphere: { color: 0x4a9cff, opacity: 0.18 },
         type: { fr: "Planète rocheuse", en: "Rocky planet" },
         name: { fr: "Terre", en: "Earth" },
         diameter: { fr: "12 742 km", en: "12,742 km" },
@@ -177,6 +200,7 @@ const bodies = {
         rotationSpeed: 0.008,
         orbitSpeed: 0.034,
         initialAngle: 1,
+        tilt: 0.03,
         type: { fr: "Satellite naturel", en: "Natural satellite" },
         name: { fr: "Lune", en: "Moon" },
         diameter: { fr: "3 474 km", en: "3,474 km" },
@@ -199,6 +223,7 @@ const bodies = {
         rotationSpeed: 0.009,
         orbitSpeed: 0.004,
         initialAngle: 3.7,
+        tilt: 0.44,
         type: { fr: "Planète rocheuse", en: "Rocky planet" },
         name: { fr: "Mars", en: "Mars" },
         diameter: { fr: "6 779 km", en: "6,779 km" },
@@ -221,6 +246,7 @@ const bodies = {
         rotationSpeed: 0.018,
         orbitSpeed: 0.002,
         initialAngle: 4.6,
+        tilt: 0.055,
         type: { fr: "Géante gazeuse", en: "Gas giant" },
         name: { fr: "Jupiter", en: "Jupiter" },
         diameter: { fr: "139 820 km", en: "139,820 km" },
@@ -243,7 +269,8 @@ const bodies = {
         rotationSpeed: 0.017,
         orbitSpeed: 0.0014,
         initialAngle: 5.4,
-        hasRings: true,
+        tilt: 0.47,
+        rings: { inner: 1.45, outer: 2.4, style: "saturn" },
         type: { fr: "Géante gazeuse", en: "Gas giant" },
         name: { fr: "Saturne", en: "Saturn" },
         diameter: { fr: "116 460 km", en: "116,460 km" },
@@ -266,6 +293,8 @@ const bodies = {
         rotationSpeed: 0.012,
         orbitSpeed: 0.0009,
         initialAngle: 0.9,
+        tilt: 1.71,
+        rings: { inner: 1.65, outer: 1.92, style: "uranus" },
         type: { fr: "Géante glacée", en: "Ice giant" },
         name: { fr: "Uranus", en: "Uranus" },
         diameter: { fr: "50 724 km", en: "50,724 km" },
@@ -288,6 +317,7 @@ const bodies = {
         rotationSpeed: 0.012,
         orbitSpeed: 0.0007,
         initialAngle: 2.1,
+        tilt: 0.49,
         type: { fr: "Géante glacée", en: "Ice giant" },
         name: { fr: "Neptune", en: "Neptune" },
         diameter: { fr: "49 244 km", en: "49,244 km" },
@@ -316,6 +346,7 @@ let labelsLayer;
 let currentTween;
 let currentLanguage = getInitialLanguage();
 let animationActive = true;
+let simulationSpeed = 1;
 let showOrbits = true;
 let showLabels = true;
 let infoVisible = false;
@@ -323,6 +354,14 @@ let selectedBodyId = null;
 let followedBodyId = null;
 let pendingFollowBodyId = null;
 let followedBodyLastPosition;
+let hoveredBodyId = null;
+let tourActive = false;
+let tourTimer = null;
+let tourIndex = -1;
+let tourButton = null;
+let asteroidBelt = null;
+let pointerDownX = 0;
+let pointerDownY = 0;
 
 const bodyObjects = {};
 const orbitObjects = [];
@@ -333,13 +372,271 @@ function getInitialLanguage() {
     return SUPPORTED_LANGUAGES.includes(storedLanguage) ? storedLanguage : "fr";
 }
 
+/* ------------------------------------------------------------------ */
+/* Procedural textures                                                 */
+/* ------------------------------------------------------------------ */
+
+function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+        a |= 0;
+        a = (a + 0x6d2b79f5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function createCanvasTexture(width, height, painter) {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    painter(canvas.getContext("2d"), width, height);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    if (renderer) {
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    }
+    return texture;
+}
+
+function fillCircleWrapped(ctx, width, x, y, radius) {
+    [x - width, x, x + width].forEach((cx) => {
+        ctx.beginPath();
+        ctx.arc(cx, y, radius, 0, TAU);
+        ctx.fill();
+    });
+}
+
+function paintSpeckles(ctx, rng, width, height, count, colors, minRadius, maxRadius, alpha) {
+    for (let i = 0; i < count; i += 1) {
+        ctx.fillStyle = colors[(rng() * colors.length) | 0];
+        ctx.globalAlpha = alpha * (0.4 + rng() * 0.6);
+        fillCircleWrapped(ctx, width, rng() * width, rng() * height, minRadius + rng() * (maxRadius - minRadius));
+    }
+    ctx.globalAlpha = 1;
+}
+
+function paintBands(ctx, rng, width, height, palette) {
+    let y = 0;
+    let bandIndex = 0;
+    while (y < height) {
+        const bandHeight = height * (0.045 + rng() * 0.085);
+        ctx.fillStyle = palette[bandIndex % palette.length];
+        ctx.fillRect(0, y, width, bandHeight + 1);
+        y += bandHeight;
+        bandIndex += 1;
+    }
+
+    for (let s = 0; s < 240; s += 1) {
+        ctx.globalAlpha = 0.05 + rng() * 0.09;
+        ctx.fillStyle = palette[(rng() * palette.length) | 0];
+        ctx.fillRect(0, rng() * height, width, 1 + rng() * 3);
+    }
+    ctx.globalAlpha = 1;
+}
+
+function paintRocky(ctx, rng, width, height, base, shades, craterCount) {
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, width, height);
+
+    for (let i = 0; i < 26; i += 1) {
+        ctx.fillStyle = shades[i % shades.length];
+        ctx.globalAlpha = 0.07 + rng() * 0.1;
+        fillCircleWrapped(ctx, width, rng() * width, rng() * height, height * (0.1 + rng() * 0.22));
+    }
+    ctx.globalAlpha = 1;
+
+    for (let i = 0; i < craterCount; i += 1) {
+        const x = rng() * width;
+        const y = rng() * height;
+        const radius = 1.5 + rng() * 5;
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.32)";
+        fillCircleWrapped(ctx, width, x, y, radius);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+        fillCircleWrapped(ctx, width, x - radius * 0.3, y - radius * 0.3, radius * 0.55);
+    }
+}
+
+function paintPolarCaps(ctx, width, height, strength) {
+    const capHeight = height * 0.08;
+
+    const top = ctx.createLinearGradient(0, 0, 0, capHeight);
+    top.addColorStop(0, `rgba(255, 255, 255, ${strength})`);
+    top.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = top;
+    ctx.fillRect(0, 0, width, capHeight);
+
+    const bottom = ctx.createLinearGradient(0, height - capHeight, 0, height);
+    bottom.addColorStop(0, "rgba(255, 255, 255, 0)");
+    bottom.addColorStop(1, `rgba(255, 255, 255, ${strength})`);
+    ctx.fillStyle = bottom;
+    ctx.fillRect(0, height - capHeight, width, capHeight);
+}
+
+const TEXTURE_BUILDERS = {
+    sun: () => createCanvasTexture(512, 256, (ctx, w, h) => {
+        const rng = mulberry32(7);
+        const gradient = ctx.createLinearGradient(0, 0, 0, h);
+        gradient.addColorStop(0, "#ffdf8e");
+        gradient.addColorStop(0.5, "#ffb845");
+        gradient.addColorStop(1, "#ff9a35");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+
+        paintSpeckles(ctx, rng, w, h, 1600, ["#ffe9a8", "#ffce63", "#ff8a2a", "#fff3c2"], 1, 4, 0.16);
+        paintSpeckles(ctx, rng, w, h, 26, ["#d96a1d", "#c2581a"], 3, 8, 0.22);
+    }),
+    mercury: () => createCanvasTexture(512, 256, (ctx, w, h) => {
+        paintRocky(ctx, mulberry32(11), w, h, "#9c968c", ["#7d776d", "#b5afa3", "#6d675e"], 230);
+    }),
+    venus: () => createCanvasTexture(512, 256, (ctx, w, h) => {
+        const rng = mulberry32(23);
+        paintBands(ctx, rng, w, h, ["#e0b066", "#d9a557", "#ecc27e", "#cf9a4c", "#e6b86f"]);
+        paintSpeckles(ctx, rng, w, h, 130, ["#f2d49a", "#c98f44"], 4, 16, 0.1);
+    }),
+    earth: () => createCanvasTexture(512, 256, (ctx, w, h) => {
+        const rng = mulberry32(42);
+        const ocean = ctx.createLinearGradient(0, 0, 0, h);
+        ocean.addColorStop(0, "#2d6fc4");
+        ocean.addColorStop(0.5, "#1c4f9e");
+        ocean.addColorStop(1, "#2d6fc4");
+        ctx.fillStyle = ocean;
+        ctx.fillRect(0, 0, w, h);
+
+        const landColors = ["#3e8a45", "#4f9a4d", "#7d9c4a", "#b3a05e", "#356f3a"];
+        for (let cluster = 0; cluster < 7; cluster += 1) {
+            const cx = rng() * w;
+            const cy = h * (0.18 + rng() * 0.64);
+            for (let blob = 0; blob < 26; blob += 1) {
+                ctx.fillStyle = landColors[(rng() * landColors.length) | 0];
+                ctx.globalAlpha = 0.88;
+                fillCircleWrapped(
+                    ctx,
+                    w,
+                    cx + (rng() - 0.5) * w * 0.16,
+                    cy + (rng() - 0.5) * h * 0.3,
+                    3 + rng() * 15
+                );
+            }
+        }
+        ctx.globalAlpha = 1;
+
+        paintSpeckles(ctx, rng, w, h, 200, ["#3c7fd4", "#16407f"], 2, 8, 0.12);
+        paintPolarCaps(ctx, w, h, 0.92);
+    }),
+    moon: () => createCanvasTexture(512, 256, (ctx, w, h) => {
+        paintRocky(ctx, mulberry32(31), w, h, "#c9c9c9", ["#a8a8a8", "#e0e0e0", "#8f8f8f"], 280);
+    }),
+    mars: () => createCanvasTexture(512, 256, (ctx, w, h) => {
+        paintRocky(ctx, mulberry32(53), w, h, "#c1542f", ["#8f3a1f", "#d97a4a", "#a64526"], 120);
+        paintPolarCaps(ctx, w, h, 0.75);
+    }),
+    jupiter: () => createCanvasTexture(512, 256, (ctx, w, h) => {
+        const rng = mulberry32(67);
+        paintBands(ctx, rng, w, h, ["#d8b08c", "#c89a6b", "#e8cba8", "#b97f55", "#e3bd92", "#a8714f"]);
+
+        ctx.fillStyle = "rgba(196, 86, 52, 0.9)";
+        ctx.beginPath();
+        ctx.ellipse(w * 0.3, h * 0.63, w * 0.055, h * 0.055, 0, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "rgba(228, 130, 92, 0.8)";
+        ctx.beginPath();
+        ctx.ellipse(w * 0.3, h * 0.63, w * 0.034, h * 0.034, 0, 0, TAU);
+        ctx.fill();
+    }),
+    saturn: () => createCanvasTexture(512, 256, (ctx, w, h) => {
+        paintBands(ctx, mulberry32(71), w, h, ["#e8d6a4", "#dcc28a", "#f0e3bd", "#cfb277", "#e6d3a0"]);
+    }),
+    uranus: () => createCanvasTexture(512, 256, (ctx, w, h) => {
+        const rng = mulberry32(83);
+        paintBands(ctx, rng, w, h, ["#9fe1ea", "#8ed7e2", "#b3e9f0", "#86d2de"]);
+        paintSpeckles(ctx, rng, w, h, 90, ["#c3f0f6", "#79c9d6"], 4, 14, 0.08);
+    }),
+    neptune: () => createCanvasTexture(512, 256, (ctx, w, h) => {
+        const rng = mulberry32(97);
+        paintBands(ctx, rng, w, h, ["#4a73e8", "#3a5fd0", "#5d86f2", "#3354c4"]);
+
+        ctx.fillStyle = "rgba(22, 42, 110, 0.85)";
+        ctx.beginPath();
+        ctx.ellipse(w * 0.62, h * 0.42, w * 0.05, h * 0.05, 0, 0, TAU);
+        ctx.fill();
+    })
+};
+
+function createCloudsTexture() {
+    return createCanvasTexture(512, 256, (ctx, w, h) => {
+        const rng = mulberry32(8);
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "#ffffff";
+        for (let i = 0; i < 85; i += 1) {
+            ctx.globalAlpha = 0.1 + rng() * 0.26;
+            const x = rng() * w;
+            const y = h * (0.1 + rng() * 0.8);
+            const radiusX = 8 + rng() * 38;
+            const radiusY = 3 + rng() * 8;
+            [x - w, x, x + w].forEach((cx) => {
+                ctx.beginPath();
+                ctx.ellipse(cx, y, radiusX, radiusY, 0, 0, TAU);
+                ctx.fill();
+            });
+        }
+        ctx.globalAlpha = 1;
+    });
+}
+
+function createRingTexture(style) {
+    return createCanvasTexture(256, 8, (ctx, w, h) => {
+        const gradient = ctx.createLinearGradient(0, 0, w, 0);
+
+        if (style === "saturn") {
+            gradient.addColorStop(0, "rgba(210, 190, 140, 0)");
+            gradient.addColorStop(0.08, "rgba(210, 190, 140, 0.45)");
+            gradient.addColorStop(0.2, "rgba(232, 212, 165, 0.85)");
+            gradient.addColorStop(0.34, "rgba(180, 160, 120, 0.4)");
+            gradient.addColorStop(0.45, "rgba(236, 216, 170, 0.9)");
+            gradient.addColorStop(0.55, "rgba(200, 180, 135, 0.6)");
+            gradient.addColorStop(0.6, "rgba(160, 145, 110, 0.06)");
+            gradient.addColorStop(0.66, "rgba(160, 145, 110, 0.06)");
+            gradient.addColorStop(0.72, "rgba(222, 202, 158, 0.7)");
+            gradient.addColorStop(0.88, "rgba(208, 188, 146, 0.45)");
+            gradient.addColorStop(1, "rgba(208, 188, 146, 0)");
+        } else {
+            gradient.addColorStop(0, "rgba(170, 220, 230, 0)");
+            gradient.addColorStop(0.3, "rgba(170, 220, 230, 0.28)");
+            gradient.addColorStop(0.7, "rgba(170, 220, 230, 0.28)");
+            gradient.addColorStop(1, "rgba(170, 220, 230, 0)");
+        }
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+    });
+}
+
+function createGlowTexture(innerColor, outerColor) {
+    return createCanvasTexture(256, 256, (ctx, w, h) => {
+        const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+        gradient.addColorStop(0, innerColor);
+        gradient.addColorStop(0.35, outerColor);
+        gradient.addColorStop(1, "rgba(255, 140, 30, 0)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+    });
+}
+
+/* ------------------------------------------------------------------ */
+/* Scene setup                                                         */
+/* ------------------------------------------------------------------ */
+
 function init() {
     sceneRoot = document.getElementById("scene-root");
     labelsLayer = document.getElementById("labels-layer");
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x02040a);
-    scene.fog = new THREE.FogExp2(0x02040a, 0.0016);
+    scene.fog = new THREE.FogExp2(0x02040a, 0.0014);
 
     camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 1600);
     camera.position.set(GLOBAL_CAMERA_POSITION.x, GLOBAL_CAMERA_POSITION.y, GLOBAL_CAMERA_POSITION.z);
@@ -363,6 +660,7 @@ function init() {
 
     createLights();
     createStarField();
+    createAsteroidBelt();
     createBodies();
     createOrbits();
     buildNavigation();
@@ -370,67 +668,126 @@ function init() {
     setLanguage(currentLanguage);
 
     window.addEventListener("resize", onWindowResize);
-    renderer.domElement.addEventListener("dblclick", onCanvasDoubleClick);
+    window.addEventListener("keydown", onKeyDown);
+
+    const canvas = renderer.domElement;
+    canvas.addEventListener("pointerdown", (event) => {
+        pointerDownX = event.clientX;
+        pointerDownY = event.clientY;
+    });
+    canvas.addEventListener("click", onCanvasClick);
+    canvas.addEventListener("dblclick", onCanvasClick);
+    canvas.addEventListener("pointermove", onCanvasPointerMove);
 
     animate();
 }
 
 function createLights() {
-    scene.add(new THREE.AmbientLight(0x6f7f95, 0.72));
+    scene.add(new THREE.AmbientLight(0x6f7f95, 0.62));
 
-    const sunLight = new THREE.PointLight(0xfff3c0, 2.25, 900);
+    const sunLight = new THREE.PointLight(0xfff3c0, 2.3, 900);
     sunLight.position.set(0, 0, 0);
     scene.add(sunLight);
 
-    const fillLight = new THREE.DirectionalLight(0x8cc9ff, 0.38);
+    const fillLight = new THREE.DirectionalLight(0x8cc9ff, 0.32);
     fillLight.position.set(-160, 100, 120);
     scene.add(fillLight);
 }
 
 function createStarField() {
+    const rng = mulberry32(2026);
+
+    const buildLayer = (starCount, size, opacity) => {
+        const geometry = new THREE.BufferGeometry();
+        const positions = [];
+        const colors = [];
+
+        for (let i = 0; i < starCount; i += 1) {
+            const radius = 420 + rng() * 520;
+            const theta = rng() * TAU;
+            const phi = Math.acos(rng() * 2 - 1);
+            positions.push(
+                radius * Math.sin(phi) * Math.cos(theta),
+                radius * Math.cos(phi),
+                radius * Math.sin(phi) * Math.sin(theta)
+            );
+
+            const brightness = 0.6 + rng() * 0.4;
+            const tint = rng();
+            if (tint < 0.16) {
+                colors.push(brightness, brightness * 0.86, brightness * 0.68);
+            } else if (tint < 0.42) {
+                colors.push(brightness * 0.78, brightness * 0.88, brightness);
+            } else {
+                colors.push(brightness, brightness, brightness);
+            }
+        }
+
+        geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+            size,
+            sizeAttenuation: false,
+            vertexColors: true,
+            transparent: true,
+            opacity,
+            depthWrite: false
+        });
+
+        scene.add(new THREE.Points(geometry, material));
+    };
+
+    buildLayer(2600, 1.3, 0.85);
+    buildLayer(380, 2.3, 0.95);
+}
+
+function createAsteroidBelt() {
+    const rng = mulberry32(404);
+    const count = 850;
     const geometry = new THREE.BufferGeometry();
     const positions = [];
     const colors = [];
-    const starCount = 2800;
 
-    for (let i = 0; i < starCount; i += 1) {
-        const radius = 420 + Math.random() * 520;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos((Math.random() * 2) - 1);
+    for (let i = 0; i < count; i += 1) {
+        const radius = 103 + rng() * 14;
+        const angle = rng() * TAU;
         positions.push(
-            radius * Math.sin(phi) * Math.cos(theta),
-            radius * Math.cos(phi),
-            radius * Math.sin(phi) * Math.sin(theta)
+            Math.cos(angle) * radius,
+            (rng() - 0.5) * 3,
+            Math.sin(angle) * radius
         );
 
-        const brightness = 0.65 + Math.random() * 0.35;
-        colors.push(brightness, brightness, brightness);
+        const shade = 0.42 + rng() * 0.32;
+        colors.push(shade, shade * 0.92, shade * 0.8);
     }
 
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
     geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
     const material = new THREE.PointsMaterial({
-        size: 1.4,
-        sizeAttenuation: false,
+        size: 1.1,
+        sizeAttenuation: true,
         vertexColors: true,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.85,
+        depthWrite: false
     });
 
-    scene.add(new THREE.Points(geometry, material));
+    asteroidBelt = new THREE.Points(geometry, material);
+    scene.add(asteroidBelt);
 }
 
 function createBodies() {
     BODY_SEQUENCE.forEach((id) => {
         const body = bodies[id];
-        const geometry = new THREE.SphereGeometry(body.visualSize, id === "moon" ? 24 : 48, 32);
+        const geometry = new THREE.SphereGeometry(body.visualSize, id === "moon" ? 32 : 48, 32);
         const material = createBodyMaterial(id, body);
         const mesh = new THREE.Mesh(geometry, material);
 
         mesh.userData.bodyId = id;
-        mesh.castShadow = false;
-        mesh.receiveShadow = false;
+        mesh.rotation.order = "ZYX";
+        mesh.rotation.z = body.tilt || 0;
 
         scene.add(mesh);
         selectableMeshes.push(mesh);
@@ -442,8 +799,20 @@ function createBodies() {
             label: createLabel(id)
         };
 
-        if (body.hasRings) {
-            addSaturnRings(mesh, body);
+        if (body.rings) {
+            addRings(mesh, body);
+        }
+
+        if (body.hasClouds) {
+            bodyObjects[id].clouds = addClouds(mesh, body);
+        }
+
+        if (body.hasAtmosphere) {
+            addAtmosphere(mesh, body);
+        }
+
+        if (id === "sun") {
+            addSunGlow(mesh, body);
         }
 
         setBodyPosition(id);
@@ -451,29 +820,93 @@ function createBodies() {
 }
 
 function createBodyMaterial(id, body) {
+    const buildTexture = TEXTURE_BUILDERS[id];
+    const map = buildTexture ? buildTexture() : null;
+
     if (id === "sun") {
-        return new THREE.MeshBasicMaterial({ color: body.color });
+        return new THREE.MeshBasicMaterial({ map, color: map ? 0xffffff : body.color });
     }
 
-    return new THREE.MeshPhongMaterial({
-        color: body.color,
-        shininess: id === "moon" ? 12 : 28,
-        emissive: new THREE.Color(body.color).multiplyScalar(0.08)
+    const material = new THREE.MeshPhongMaterial({
+        map,
+        color: map ? 0xffffff : body.color,
+        shininess: id === "moon" || id === "mercury" ? 6 : 18,
+        emissive: new THREE.Color(body.color).multiplyScalar(0.06)
     });
+    material.userData.baseEmissive = material.emissive.clone();
+    material.userData.hoverEmissive = new THREE.Color(body.color).multiplyScalar(0.32);
+    return material;
 }
 
-function addSaturnRings(mesh, body) {
-    const ringGeometry = new THREE.RingGeometry(body.visualSize * 1.45, body.visualSize * 2.35, 96);
-    const ringMaterial = new THREE.MeshBasicMaterial({
-        color: 0xd7c48b,
+function addRings(mesh, body) {
+    const inner = body.visualSize * body.rings.inner;
+    const outer = body.visualSize * body.rings.outer;
+    const geometry = new THREE.RingGeometry(inner, outer, 128, 1);
+
+    // Remap UVs radially so the 1D ring gradient follows the radius.
+    const position = geometry.attributes.position;
+    const point = new THREE.Vector3();
+    for (let i = 0; i < position.count; i += 1) {
+        point.fromBufferAttribute(position, i);
+        geometry.attributes.uv.setXY(i, (point.length() - inner) / (outer - inner), 0.5);
+    }
+
+    const material = new THREE.MeshBasicMaterial({
+        map: createRingTexture(body.rings.style),
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.72
+        depthWrite: false
     });
-    const rings = new THREE.Mesh(ringGeometry, ringMaterial);
+
+    const rings = new THREE.Mesh(geometry, material);
     rings.rotation.x = Math.PI / 2;
-    rings.rotation.z = -0.22;
     mesh.add(rings);
+}
+
+function addClouds(mesh, body) {
+    const geometry = new THREE.SphereGeometry(body.visualSize * 1.035, 48, 32);
+    const material = new THREE.MeshPhongMaterial({
+        map: createCloudsTexture(),
+        transparent: true,
+        depthWrite: false,
+        shininess: 4
+    });
+    const clouds = new THREE.Mesh(geometry, material);
+    mesh.add(clouds);
+    return clouds;
+}
+
+function addAtmosphere(mesh, body) {
+    const geometry = new THREE.SphereGeometry(body.visualSize * 1.16, 32, 24);
+    const material = new THREE.MeshBasicMaterial({
+        color: body.hasAtmosphere.color,
+        transparent: true,
+        opacity: body.hasAtmosphere.opacity,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    mesh.add(new THREE.Mesh(geometry, material));
+}
+
+function addSunGlow(mesh, body) {
+    const outerGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: createGlowTexture("rgba(255, 226, 150, 0.85)", "rgba(255, 160, 60, 0.32)"),
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        depthWrite: false
+    }));
+    outerGlow.scale.setScalar(body.visualSize * 5.4);
+    mesh.add(outerGlow);
+
+    const innerGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: createGlowTexture("rgba(255, 244, 200, 0.95)", "rgba(255, 190, 80, 0.5)"),
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        depthWrite: false
+    }));
+    innerGlow.scale.setScalar(body.visualSize * 2.9);
+    mesh.add(innerGlow);
 }
 
 function createLabel(id) {
@@ -489,21 +922,28 @@ function createOrbits() {
         const body = bodies[id];
         if (!body.orbitRadius) return;
 
-        const width = body.parent ? 0.035 : 0.075;
-        const segments = body.parent ? 72 : 160;
-        const geometry = new THREE.RingGeometry(body.orbitRadius - width, body.orbitRadius + width, segments);
-        const material = new THREE.MeshBasicMaterial({
-            color: body.parent ? 0x6e7582 : 0x8a94a6,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: body.parent ? 0.34 : 0.28
-        });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.rotation.x = Math.PI / 2;
-        mesh.visible = showOrbits;
-        scene.add(mesh);
+        const segments = body.parent ? 96 : 200;
+        const points = [];
+        for (let i = 0; i <= segments; i += 1) {
+            const angle = (i / segments) * TAU;
+            points.push(new THREE.Vector3(
+                Math.cos(angle) * body.orbitRadius,
+                0,
+                Math.sin(angle) * body.orbitRadius
+            ));
+        }
 
-        orbitObjects.push({ mesh, parentId: body.parent || null });
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({
+            color: body.parent ? 0x7d87a0 : 0x9aa6bb,
+            transparent: true,
+            opacity: body.parent ? 0.4 : 0.32
+        });
+        const line = new THREE.Line(geometry, material);
+        line.visible = showOrbits;
+        scene.add(line);
+
+        orbitObjects.push({ mesh: line, parentId: body.parent || null });
     });
 
     updateOrbitPositions();
@@ -528,7 +968,7 @@ function setBodyPosition(id) {
 }
 
 function updateBodies(delta) {
-    const frameFactor = delta * 60;
+    const frameFactor = delta * 60 * simulationSpeed;
 
     BODY_SEQUENCE.forEach((id) => {
         const object = bodyObjects[id];
@@ -536,11 +976,19 @@ function updateBodies(delta) {
 
         object.mesh.rotation.y += object.data.rotationSpeed * frameFactor;
 
+        if (object.clouds) {
+            object.clouds.rotation.y += 0.0028 * frameFactor;
+        }
+
         if (!animationActive || !object.data.orbitSpeed) return;
 
         object.angle += object.data.orbitSpeed * frameFactor;
         setBodyPosition(id);
     });
+
+    if (asteroidBelt && animationActive) {
+        asteroidBelt.rotation.y += 0.0004 * frameFactor;
+    }
 }
 
 function updateOrbitPositions() {
@@ -550,12 +998,17 @@ function updateOrbitPositions() {
     });
 }
 
+/* ------------------------------------------------------------------ */
+/* Navigation & UI                                                     */
+/* ------------------------------------------------------------------ */
+
 function buildNavigation() {
     const destinationList = document.getElementById("destination-list");
     destinationList.innerHTML = "";
 
     destinationList.appendChild(createGlobalViewButton());
     destinationList.appendChild(createAlignBodiesButton());
+    destinationList.appendChild(createTourButton());
 
     BODY_SEQUENCE.forEach((id) => {
         destinationList.appendChild(createBodyButton(id, "destination-btn"));
@@ -578,6 +1031,16 @@ function createAlignBodiesButton() {
     button.innerHTML = '<span class="symbol" aria-hidden="true">↔</span><span data-i18n="alignBodies"></span>';
     button.addEventListener("click", alignBodies);
     return button;
+}
+
+function createTourButton() {
+    tourButton = document.createElement("button");
+    tourButton.type = "button";
+    tourButton.className = "destination-btn tour-btn";
+    tourButton.setAttribute("aria-pressed", "false");
+    tourButton.innerHTML = '<span class="symbol" aria-hidden="true">▶</span><span data-i18n="tourStart"></span>';
+    tourButton.addEventListener("click", toggleTour);
+    return tourButton;
 }
 
 function createBodyButton(id, className) {
@@ -648,6 +1111,36 @@ function setupUI() {
             }
         }
     });
+
+    const fullscreenButton = document.getElementById("toggle-fullscreen");
+    if (fullscreenButton) {
+        fullscreenButton.addEventListener("click", () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+        });
+        document.addEventListener("fullscreenchange", () => {
+            setToggleState("toggle-fullscreen", Boolean(document.fullscreenElement));
+        });
+    }
+
+    const speedSlider = document.getElementById("speed-slider");
+    if (speedSlider) {
+        speedSlider.addEventListener("input", () => {
+            simulationSpeed = parseFloat(speedSlider.value);
+            updateSpeedValue();
+        });
+        updateSpeedValue();
+    }
+}
+
+function updateSpeedValue() {
+    const output = document.getElementById("speed-value");
+    if (output) {
+        output.textContent = `×${parseFloat(simulationSpeed.toFixed(2))}`;
+    }
 }
 
 function setToggleState(id, active) {
@@ -685,6 +1178,7 @@ function setLanguage(language) {
 
     updateNavigationLabels();
     updateLabelText();
+    updateTourButton();
 
     if (infoVisible && selectedBodyId) {
         renderInfo(selectedBodyId);
@@ -696,6 +1190,7 @@ function setLanguage(language) {
 function updateNavigationLabels() {
     document.querySelectorAll("[data-body-id]").forEach((button) => {
         const id = button.dataset.bodyId;
+        if (!bodies[id]) return;
         const label = button.querySelector(".body-button-label");
         if (label) {
             label.textContent = bodies[id].name[currentLanguage];
@@ -707,6 +1202,12 @@ function updateNavigationLabels() {
 function updateLabelText() {
     Object.entries(bodyObjects).forEach(([id, object]) => {
         object.label.textContent = bodies[id].name[currentLanguage];
+    });
+}
+
+function updateActiveDestination() {
+    document.querySelectorAll(".destination-btn[data-body-id]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.bodyId === selectedBodyId);
     });
 }
 
@@ -749,9 +1250,17 @@ function renderInfo(id) {
     `;
 }
 
-function focusBody(id) {
+/* ------------------------------------------------------------------ */
+/* Camera, focus & tour                                                */
+/* ------------------------------------------------------------------ */
+
+function focusBody(id, fromTour = false) {
     const object = bodyObjects[id];
     if (!object) return;
+
+    if (!fromTour) {
+        stopTour();
+    }
 
     selectedBodyId = id;
     followedBodyId = null;
@@ -760,6 +1269,7 @@ function focusBody(id) {
     setToggleState("toggle-info", true);
     document.getElementById("info-panel").classList.remove("is-hidden");
     renderInfo(id);
+    updateActiveDestination();
 
     const target = object.mesh.position.clone();
     const viewDistance = Math.max(object.data.visualSize * 8, id === "sun" ? 72 : 34);
@@ -818,8 +1328,11 @@ function moveCameraTo(endCamera, endTarget, onComplete) {
 }
 
 function resetView() {
+    stopTour();
     followedBodyId = null;
     pendingFollowBodyId = null;
+    selectedBodyId = null;
+    updateActiveDestination();
 
     const endCamera = new THREE.Vector3(
         GLOBAL_CAMERA_POSITION.x,
@@ -852,6 +1365,48 @@ function alignBodies() {
     updateLabels();
 }
 
+function toggleTour() {
+    if (tourActive) {
+        stopTour();
+    } else {
+        startTour();
+    }
+}
+
+function startTour() {
+    tourActive = true;
+    updateTourButton();
+    advanceTour();
+    tourTimer = window.setInterval(advanceTour, TOUR_STEP_DURATION);
+}
+
+function advanceTour() {
+    tourIndex = (tourIndex + 1) % BODY_SEQUENCE.length;
+    focusBody(BODY_SEQUENCE[tourIndex], true);
+}
+
+function stopTour() {
+    if (tourTimer !== null) {
+        window.clearInterval(tourTimer);
+        tourTimer = null;
+    }
+    if (!tourActive) return;
+    tourActive = false;
+    updateTourButton();
+}
+
+function updateTourButton() {
+    if (!tourButton) return;
+
+    const key = tourActive ? "tourStop" : "tourStart";
+    const labelSpan = tourButton.querySelector("[data-i18n]");
+    labelSpan.dataset.i18n = key;
+    labelSpan.textContent = UI_TEXT[currentLanguage][key];
+    tourButton.querySelector(".symbol").textContent = tourActive ? "■" : "▶";
+    tourButton.classList.toggle("active", tourActive);
+    tourButton.setAttribute("aria-pressed", String(tourActive));
+}
+
 function startFollowingBody(id) {
     const object = bodyObjects[id];
     if (!object) return;
@@ -882,18 +1437,78 @@ function updateFollowedBody() {
     }
 }
 
-function onCanvasDoubleClick(event) {
+/* ------------------------------------------------------------------ */
+/* Picking, hover & keyboard                                           */
+/* ------------------------------------------------------------------ */
+
+function pickBodyAt(clientX, clientY) {
     const rect = renderer.domElement.getBoundingClientRect();
-    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    pointer.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+    pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -(((clientY - rect.top) / rect.height) * 2 - 1);
 
     raycaster.setFromCamera(pointer, camera);
     const intersections = raycaster.intersectObjects(selectableMeshes, false);
+    return intersections.length > 0 ? intersections[0].object.userData.bodyId : null;
+}
 
-    if (intersections.length > 0) {
-        focusBody(intersections[0].object.userData.bodyId);
+function onCanvasClick(event) {
+    const dragDistance = Math.hypot(event.clientX - pointerDownX, event.clientY - pointerDownY);
+    if (dragDistance > 6) return;
+
+    const bodyId = pickBodyAt(event.clientX, event.clientY);
+    if (bodyId) {
+        focusBody(bodyId);
     }
 }
+
+function onCanvasPointerMove(event) {
+    setHoveredBody(pickBodyAt(event.clientX, event.clientY));
+}
+
+function setHoveredBody(id) {
+    if (id === hoveredBodyId) return;
+
+    if (hoveredBodyId) {
+        const previous = bodyObjects[hoveredBodyId];
+        const material = previous.mesh.material;
+        if (material.userData && material.userData.baseEmissive) {
+            material.emissive.copy(material.userData.baseEmissive);
+        }
+        previous.label.classList.remove("is-hovered");
+    }
+
+    hoveredBodyId = id;
+
+    if (hoveredBodyId) {
+        const current = bodyObjects[hoveredBodyId];
+        const material = current.mesh.material;
+        if (material.userData && material.userData.hoverEmissive) {
+            material.emissive.copy(material.userData.hoverEmissive);
+        }
+        current.label.classList.add("is-hovered");
+    }
+
+    renderer.domElement.style.cursor = hoveredBodyId ? "pointer" : "";
+}
+
+function onKeyDown(event) {
+    const target = event.target;
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
+
+    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+        event.preventDefault();
+        const direction = event.key === "ArrowRight" ? 1 : -1;
+        const currentIndex = selectedBodyId ? BODY_SEQUENCE.indexOf(selectedBodyId) : -1;
+        const nextIndex = (currentIndex + direction + BODY_SEQUENCE.length) % BODY_SEQUENCE.length;
+        focusBody(BODY_SEQUENCE[nextIndex]);
+    } else if (event.key === "Escape") {
+        resetView();
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Render loop                                                         */
+/* ------------------------------------------------------------------ */
 
 function updateLabels() {
     const width = window.innerWidth;
@@ -951,4 +1566,26 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-window.addEventListener("load", init);
+window.addEventListener("load", () => {
+    const loadingScreen = document.getElementById("loading-screen");
+
+    if (typeof THREE === "undefined" || typeof THREE.OrbitControls === "undefined") {
+        if (loadingScreen) {
+            loadingScreen.classList.add("has-error");
+            const message = loadingScreen.querySelector("p");
+            if (message) {
+                message.textContent = UI_TEXT[currentLanguage].loadErrorText;
+            }
+        }
+        return;
+    }
+
+    init();
+
+    if (loadingScreen) {
+        requestAnimationFrame(() => {
+            loadingScreen.classList.add("is-done");
+            window.setTimeout(() => loadingScreen.remove(), 700);
+        });
+    }
+});

@@ -17,10 +17,15 @@ La démo publique est prévue sur GitHub Pages :
 ### Fonctionnalités
 
 - Vue 3D interactive du Soleil, des 8 planètes et de la Lune.
-- Navigation par souris : rotation, zoom et double-clic sur un astre.
-- Boutons de destination pour rejoindre rapidement chaque astre.
+- Textures planétaires procédurales (continents et nuages terrestres, bandes des géantes gazeuses, cratères, calottes polaires) générées sans aucune image externe.
+- Anneaux détaillés pour Saturne (avec division de Cassini) et Uranus, halo solaire et ceinture d'astéroïdes.
+- Navigation par souris : rotation, zoom, clic ou double-clic sur un astre, avec surbrillance au survol.
+- Navigation clavier : flèches ← → pour passer d'un astre à l'autre, Échap pour revenir à la vue globale.
+- Visite guidée automatique qui enchaîne les astres et ouvre leur fiche.
+- Boutons de destination pour rejoindre rapidement chaque astre, avec indication de l'astre sélectionné.
 - Fiches courtes avec type, diamètre, distance, période orbitale, description et fait marquant.
-- Options pour afficher ou masquer les orbites, les noms, les fiches et l'animation.
+- Options pour afficher ou masquer les orbites, les noms, les fiches et l'animation, plus un réglage de la vitesse de simulation et un mode plein écran.
+- Écran de chargement avec message d'erreur clair si le moteur 3D ne peut pas être chargé.
 - Interface bilingue français / anglais avec préférence conservée dans le navigateur.
 - Site statique compatible avec GitHub Pages, sans étape de build.
 
@@ -28,8 +33,11 @@ La démo publique est prévue sur GitHub Pages :
 
 - Cliquer + glisser : tourner autour du système solaire.
 - Molette : zoomer ou dézoomer.
-- Double-clic sur un astre : centrer la caméra et ouvrir sa fiche.
+- Clic (ou double-clic) sur un astre : centrer la caméra et ouvrir sa fiche.
+- Flèches ← → : passer à l'astre suivant ou précédent. Échap : vue globale.
 - Boutons de destination : aller directement vers le Soleil, une planète ou la Lune.
+- Bouton « Visite guidée » : enchaîner automatiquement la découverte de tous les astres.
+- Curseur « Vitesse » : ralentir, accélérer ou mettre en pause la simulation.
 - Boutons FR / EN : changer la langue de l'interface.
 
 ### Installation locale
@@ -79,17 +87,14 @@ explorateur-espace-3d/
 
 - La simulation n'est pas à l'échelle réelle.
 - Les trajectoires sont circulaires et simplifiées.
-- Les textures réalistes ne sont pas incluses dans cette V1.
+- Les textures sont stylisées (générées par code), pas des photographies réelles.
 - Les données sont sélectionnées pour la découverte, pas pour un usage scientifique avancé.
 
 ### Idées d'évolution
 
-- Parcours guidé pour une utilisation en classe.
 - Mode quiz.
-- Textures planétaires.
 - Lunes supplémentaires.
-- Mode plein écran.
-- Meilleure accessibilité clavier.
+- Textures photographiques optionnelles.
 
 ### Contribution
 
@@ -123,10 +128,15 @@ The public demo is intended for GitHub Pages:
 ### Features
 
 - Interactive 3D view of the Sun, the 8 planets, and the Moon.
-- Mouse navigation: rotate, zoom, and double-click a body.
-- Destination buttons to quickly travel to each body.
+- Procedural planetary textures (Earth continents and clouds, gas giant bands, craters, polar caps) generated without any external image.
+- Detailed rings for Saturn (with the Cassini division) and Uranus, a solar glow, and an asteroid belt.
+- Mouse navigation: rotate, zoom, click or double-click a body, with hover highlighting.
+- Keyboard navigation: ← → arrow keys to move between bodies, Esc to return to the overview.
+- Automatic guided tour that visits each body and opens its card.
+- Destination buttons to quickly travel to each body, with the selected body highlighted.
 - Short information cards with type, diameter, distance, orbital period, description, and key fact.
-- Options to show or hide orbits, names, information cards, and animation.
+- Options to show or hide orbits, names, information cards, and animation, plus a simulation speed slider and a fullscreen mode.
+- Loading screen with a clear error message if the 3D engine cannot be loaded.
 - French / English interface with browser-persisted language preference.
 - Static GitHub Pages-ready site with no build step.
 
@@ -134,8 +144,11 @@ The public demo is intended for GitHub Pages:
 
 - Click + drag: rotate around the Solar System.
 - Mouse wheel: zoom in or out.
-- Double-click a body: center the camera and open its card.
+- Click (or double-click) a body: center the camera and open its card.
+- ← → arrow keys: move to the next or previous body. Esc: overview.
 - Destination buttons: travel directly to the Sun, a planet, or the Moon.
+- "Guided tour" button: automatically visit every body in sequence.
+- "Speed" slider: slow down, speed up, or pause the simulation.
 - FR / EN buttons: switch the interface language.
 
 ### Local Setup
@@ -185,17 +198,14 @@ explorateur-espace-3d/
 
 - The simulation is not to real scale.
 - Orbits are circular and simplified.
-- Realistic planetary textures are not included in this V1.
+- Textures are stylized (generated by code), not real photographs.
 - Data is selected for discovery, not advanced scientific use.
 
 ### Future Ideas
 
-- Guided classroom path.
 - Quiz mode.
-- Planet textures.
 - Additional moons.
-- Full-screen mode.
-- Better keyboard accessibility.
+- Optional photographic textures.
 
 ### Contributing
 
