@@ -422,25 +422,6 @@ function paintSpeckles(ctx, rng, width, height, count, colors, minRadius, maxRad
     ctx.globalAlpha = 1;
 }
 
-function paintBands(ctx, rng, width, height, palette) {
-    let y = 0;
-    let bandIndex = 0;
-    while (y < height) {
-        const bandHeight = height * (0.045 + rng() * 0.085);
-        ctx.fillStyle = palette[bandIndex % palette.length];
-        ctx.fillRect(0, y, width, bandHeight + 1);
-        y += bandHeight;
-        bandIndex += 1;
-    }
-
-    for (let s = 0; s < 240; s += 1) {
-        ctx.globalAlpha = 0.05 + rng() * 0.09;
-        ctx.fillStyle = palette[(rng() * palette.length) | 0];
-        ctx.fillRect(0, rng() * height, width, 1 + rng() * 3);
-    }
-    ctx.globalAlpha = 1;
-}
-
 function paintRocky(ctx, rng, width, height, base, shades, craterCount) {
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, width, height);
@@ -452,7 +433,11 @@ function paintRocky(ctx, rng, width, height, base, shades, craterCount) {
     }
     ctx.globalAlpha = 1;
 
-    for (let i = 0; i < craterCount; i += 1) {
+    paintCraters(ctx, rng, width, height, craterCount);
+}
+
+function paintCraters(ctx, rng, width, height, count) {
+    for (let i = 0; i < count; i += 1) {
         const x = rng() * width;
         const y = rng() * height;
         const radius = 1.5 + rng() * 5;
@@ -462,6 +447,39 @@ function paintRocky(ctx, rng, width, height, base, shades, craterCount) {
         ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
         fillCircleWrapped(ctx, width, x - radius * 0.3, y - radius * 0.3, radius * 0.55);
     }
+}
+
+function paintGradient(ctx, width, height, stops) {
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+    stops.forEach(([position, color]) => gradient.addColorStop(position, color));
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+}
+
+function paintWavyRibbons(ctx, rng, width, height, colors, ribbonCount, maxAmplitude) {
+    for (let i = 0; i < ribbonCount; i += 1) {
+        const yCenter = ((i + 0.5) / ribbonCount + (rng() - 0.5) * 0.06) * height;
+        const thickness = (height / ribbonCount) * (0.45 + rng() * 0.75);
+        const amplitude = maxAmplitude * (0.4 + rng() * 0.6);
+        // An integer frequency keeps the left/right texture seam invisible.
+        const frequency = 1 + Math.floor(rng() * 4);
+        const phase = rng() * TAU;
+        const edgeY = (x) => yCenter + Math.sin((x / width) * frequency * TAU + phase) * amplitude;
+
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.globalAlpha = 0.14 + rng() * 0.16;
+        ctx.beginPath();
+        ctx.moveTo(0, edgeY(0) - thickness / 2);
+        for (let x = 8; x <= width; x += 8) {
+            ctx.lineTo(x, edgeY(x) - thickness / 2);
+        }
+        for (let x = width; x >= 0; x -= 8) {
+            ctx.lineTo(x, edgeY(x) + thickness / 2);
+        }
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
 }
 
 function paintPolarCaps(ctx, width, height, strength) {
@@ -478,6 +496,24 @@ function paintPolarCaps(ctx, width, height, strength) {
     bottom.addColorStop(1, `rgba(255, 255, 255, ${strength})`);
     ctx.fillStyle = bottom;
     ctx.fillRect(0, height - capHeight, width, capHeight);
+}
+
+// Real photographic maps (NASA Blue Marble, public domain). They are
+// loaded asynchronously and replace the procedural texture once ready,
+// so the scene never waits on them.
+const REAL_TEXTURES = {
+    earth: { map: "assets/textures/earth-day.jpg", clouds: "assets/textures/earth-clouds.png" }
+};
+
+function upgradeToRealTexture(material, path) {
+    new THREE.TextureLoader().load(path, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        if (renderer) {
+            texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        }
+        material.map = texture;
+        material.needsUpdate = true;
+    });
 }
 
 const TEXTURE_BUILDERS = {
@@ -498,8 +534,10 @@ const TEXTURE_BUILDERS = {
     }),
     venus: () => createCanvasTexture(512, 256, (ctx, w, h) => {
         const rng = mulberry32(23);
-        paintBands(ctx, rng, w, h, ["#e0b066", "#d9a557", "#ecc27e", "#cf9a4c", "#e6b86f"]);
-        paintSpeckles(ctx, rng, w, h, 130, ["#f2d49a", "#c98f44"], 4, 16, 0.1);
+        paintGradient(ctx, w, h, [
+            [0, "#caa05c"], [0.25, "#e3bd7d"], [0.5, "#d8ae67"], [0.75, "#e8c98e"], [1, "#c89a55"]
+        ]);
+        paintWavyRibbons(ctx, rng, w, h, ["#f2d9a4", "#b8853f", "#e8c98e"], 10, 14);
     }),
     earth: () => createCanvasTexture(512, 256, (ctx, w, h) => {
         const rng = mulberry32(42);
@@ -532,36 +570,103 @@ const TEXTURE_BUILDERS = {
         paintPolarCaps(ctx, w, h, 0.92);
     }),
     moon: () => createCanvasTexture(512, 256, (ctx, w, h) => {
-        paintRocky(ctx, mulberry32(31), w, h, "#c9c9c9", ["#a8a8a8", "#e0e0e0", "#8f8f8f"], 280);
+        const rng = mulberry32(31);
+        ctx.fillStyle = "#c4c2bd";
+        ctx.fillRect(0, 0, w, h);
+
+        for (let i = 0; i < 20; i += 1) {
+            ctx.fillStyle = i % 2 ? "#d6d4cf" : "#aeacaa";
+            ctx.globalAlpha = 0.08 + rng() * 0.08;
+            fillCircleWrapped(ctx, w, rng() * w, rng() * h, h * (0.1 + rng() * 0.2));
+        }
+
+        // Lunar maria: large dark basalt patches clustered on one face.
+        const mariaColors = ["#76757d", "#828089", "#6d6c74"];
+        for (let m = 0; m < 6; m += 1) {
+            const cx = w * (0.15 + rng() * 0.35);
+            const cy = h * (0.22 + rng() * 0.42);
+            ctx.fillStyle = mariaColors[m % mariaColors.length];
+            ctx.globalAlpha = 0.5;
+            for (let b = 0; b < 16; b += 1) {
+                fillCircleWrapped(ctx, w, cx + (rng() - 0.5) * w * 0.1, cy + (rng() - 0.5) * h * 0.2, 5 + rng() * 13);
+            }
+        }
+        ctx.globalAlpha = 1;
+
+        paintCraters(ctx, rng, w, h, 250);
     }),
     mars: () => createCanvasTexture(512, 256, (ctx, w, h) => {
-        paintRocky(ctx, mulberry32(53), w, h, "#c1542f", ["#8f3a1f", "#d97a4a", "#a64526"], 120);
-        paintPolarCaps(ctx, w, h, 0.75);
+        const rng = mulberry32(53);
+        paintGradient(ctx, w, h, [
+            [0, "#d2825a"], [0.35, "#c1542f"], [0.7, "#9c4526"], [1, "#b35530"]
+        ]);
+
+        // Dark volcanic regions such as Syrtis Major.
+        const darkShades = ["#5e3320", "#74402a", "#834a2e"];
+        for (let i = 0; i < 9; i += 1) {
+            const cx = rng() * w;
+            const cy = h * (0.25 + rng() * 0.5);
+            ctx.fillStyle = darkShades[i % darkShades.length];
+            ctx.globalAlpha = 0.2 + rng() * 0.16;
+            for (let b = 0; b < 14; b += 1) {
+                fillCircleWrapped(ctx, w, cx + (rng() - 0.5) * w * 0.12, cy + (rng() - 0.5) * h * 0.16, 4 + rng() * 14);
+            }
+        }
+        ctx.globalAlpha = 1;
+
+        paintSpeckles(ctx, rng, w, h, 120, ["#dd8f60", "#c96a3c"], 3, 10, 0.12);
+        paintCraters(ctx, rng, w, h, 70);
+        paintPolarCaps(ctx, w, h, 0.85);
     }),
     jupiter: () => createCanvasTexture(512, 256, (ctx, w, h) => {
         const rng = mulberry32(67);
-        paintBands(ctx, rng, w, h, ["#d8b08c", "#c89a6b", "#e8cba8", "#b97f55", "#e3bd92", "#a8714f"]);
+        paintGradient(ctx, w, h, [
+            [0, "#c8a47b"], [0.12, "#e8d9b8"], [0.24, "#b3805a"], [0.34, "#e6d3ae"],
+            [0.45, "#a9744e"], [0.55, "#ead9b9"], [0.64, "#bd8a5e"], [0.76, "#ddc9a4"],
+            [0.88, "#b78b62"], [1, "#cba87f"]
+        ]);
+        paintWavyRibbons(ctx, rng, w, h, ["#8a5a3a", "#f4ead2", "#9c6b45", "#e8d9b8"], 14, 7);
 
-        ctx.fillStyle = "rgba(196, 86, 52, 0.9)";
+        // Great Red Spot with a soft pale collar.
+        const spot = ctx.createRadialGradient(w * 0.3, h * 0.63, 2, w * 0.3, h * 0.63, w * 0.06);
+        spot.addColorStop(0, "rgba(205, 92, 58, 0.95)");
+        spot.addColorStop(0.55, "rgba(186, 74, 44, 0.8)");
+        spot.addColorStop(0.8, "rgba(226, 202, 162, 0.45)");
+        spot.addColorStop(1, "rgba(226, 202, 162, 0)");
+        ctx.fillStyle = spot;
         ctx.beginPath();
-        ctx.ellipse(w * 0.3, h * 0.63, w * 0.055, h * 0.055, 0, 0, TAU);
-        ctx.fill();
-        ctx.fillStyle = "rgba(228, 130, 92, 0.8)";
-        ctx.beginPath();
-        ctx.ellipse(w * 0.3, h * 0.63, w * 0.034, h * 0.034, 0, 0, TAU);
+        ctx.ellipse(w * 0.3, h * 0.63, w * 0.07, h * 0.075, 0, 0, TAU);
         ctx.fill();
     }),
     saturn: () => createCanvasTexture(512, 256, (ctx, w, h) => {
-        paintBands(ctx, mulberry32(71), w, h, ["#e8d6a4", "#dcc28a", "#f0e3bd", "#cfb277", "#e6d3a0"]);
+        const rng = mulberry32(71);
+        paintGradient(ctx, w, h, [
+            [0, "#b89c6a"], [0.2, "#e4d4a4"], [0.4, "#d2bc88"], [0.55, "#ecdfb8"],
+            [0.7, "#d7c190"], [0.85, "#c4ab79"], [1, "#ab915f"]
+        ]);
+        paintWavyRibbons(ctx, rng, w, h, ["#f4ead0", "#b09056", "#e0d0a0"], 12, 4);
     }),
     uranus: () => createCanvasTexture(512, 256, (ctx, w, h) => {
         const rng = mulberry32(83);
-        paintBands(ctx, rng, w, h, ["#9fe1ea", "#8ed7e2", "#b3e9f0", "#86d2de"]);
-        paintSpeckles(ctx, rng, w, h, 90, ["#c3f0f6", "#79c9d6"], 4, 14, 0.08);
+        paintGradient(ctx, w, h, [
+            [0, "#7fc7d6"], [0.4, "#9fe0ea"], [0.6, "#92dae5"], [1, "#6fbccb"]
+        ]);
+        paintWavyRibbons(ctx, rng, w, h, ["#b8ecf3", "#7cc8d6"], 6, 5);
     }),
     neptune: () => createCanvasTexture(512, 256, (ctx, w, h) => {
         const rng = mulberry32(97);
-        paintBands(ctx, rng, w, h, ["#4a73e8", "#3a5fd0", "#5d86f2", "#3354c4"]);
+        paintGradient(ctx, w, h, [
+            [0, "#2b46a8"], [0.3, "#4a73e8"], [0.55, "#3a5fd0"], [0.8, "#4e76e3"], [1, "#2c49b0"]
+        ]);
+        paintWavyRibbons(ctx, rng, w, h, ["#6f93f2", "#2843a0", "#9db8f8"], 8, 8);
+
+        // Bright methane cloud wisps.
+        ctx.fillStyle = "#dde7ff";
+        for (let i = 0; i < 14; i += 1) {
+            ctx.globalAlpha = 0.14 + rng() * 0.18;
+            ctx.fillRect(rng() * w, rng() * h, 20 + rng() * 60, 1 + rng() * 2);
+        }
+        ctx.globalAlpha = 1;
 
         ctx.fillStyle = "rgba(22, 42, 110, 0.85)";
         ctx.beginPath();
@@ -809,7 +914,7 @@ function createBodies() {
         }
 
         if (body.hasClouds) {
-            bodyObjects[id].clouds = addClouds(mesh, body);
+            bodyObjects[id].clouds = addClouds(mesh, body, id);
         }
 
         if (body.hasAtmosphere) {
@@ -840,6 +945,11 @@ function createBodyMaterial(id, body) {
     });
     material.userData.baseEmissive = material.emissive.clone();
     material.userData.hoverEmissive = new THREE.Color(body.color).multiplyScalar(0.32);
+
+    if (REAL_TEXTURES[id] && REAL_TEXTURES[id].map) {
+        upgradeToRealTexture(material, REAL_TEXTURES[id].map);
+    }
+
     return material;
 }
 
@@ -868,7 +978,7 @@ function addRings(mesh, body) {
     mesh.add(rings);
 }
 
-function addClouds(mesh, body) {
+function addClouds(mesh, body, id) {
     const geometry = new THREE.SphereGeometry(body.visualSize * 1.035, 48, 32);
     const material = new THREE.MeshPhongMaterial({
         map: createCloudsTexture(),
@@ -876,6 +986,11 @@ function addClouds(mesh, body) {
         depthWrite: false,
         shininess: 4
     });
+
+    if (REAL_TEXTURES[id] && REAL_TEXTURES[id].clouds) {
+        upgradeToRealTexture(material, REAL_TEXTURES[id].clouds);
+    }
+
     const clouds = new THREE.Mesh(geometry, material);
     mesh.add(clouds);
     return clouds;

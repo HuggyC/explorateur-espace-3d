@@ -698,7 +698,8 @@ input:focus-visible {
     position: absolute;
     left: 50%;
     top: calc(100% + 8px);
-    width: min(420px, calc(100vw - 40px));
+    width: min(420px, calc(100vw - 24px));
+    white-space: normal;
     padding: 12px 14px;
     border: 1px solid rgba(105, 210, 255, 0.34);
     border-radius: var(--radius);
