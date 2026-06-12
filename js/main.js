@@ -498,11 +498,21 @@ function paintPolarCaps(ctx, width, height, strength) {
     ctx.fillRect(0, height - capHeight, width, capHeight);
 }
 
-// Real photographic maps (NASA Blue Marble, public domain). They are
-// loaded asynchronously and replace the procedural texture once ready,
-// so the scene never waits on them.
+// Real photographic maps: NASA Blue Marble for Earth (public domain)
+// and the Solar System Scope set (CC BY 4.0) for the other bodies.
+// They are loaded asynchronously and replace the procedural textures
+// once ready, so the scene never waits on them.
 const REAL_TEXTURES = {
-    earth: { map: "assets/textures/earth-day.jpg", clouds: "assets/textures/earth-clouds.png" }
+    sun: { map: "assets/textures/sun.jpg" },
+    mercury: { map: "assets/textures/mercury.jpg" },
+    venus: { map: "assets/textures/venus.jpg" },
+    earth: { map: "assets/textures/earth-day.jpg", clouds: "assets/textures/earth-clouds.png" },
+    moon: { map: "assets/textures/moon.jpg" },
+    mars: { map: "assets/textures/mars.jpg" },
+    jupiter: { map: "assets/textures/jupiter.jpg" },
+    saturn: { map: "assets/textures/saturn.jpg", ring: "assets/textures/saturn-ring.png" },
+    uranus: { map: "assets/textures/uranus.jpg" },
+    neptune: { map: "assets/textures/neptune.jpg" }
 };
 
 function upgradeToRealTexture(material, path) {
@@ -804,6 +814,24 @@ function createLights() {
     scene.add(fillLight);
 }
 
+// Soft round dot used by every particle cloud, so points render as
+// small discs instead of hard square pixels.
+let particleTexture = null;
+
+function getParticleTexture() {
+    if (!particleTexture) {
+        particleTexture = createCanvasTexture(64, 64, (ctx, w, h) => {
+            const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+            gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
+            gradient.addColorStop(0.45, "rgba(255, 255, 255, 0.85)");
+            gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, w, h);
+        });
+    }
+    return particleTexture;
+}
+
 function createStarField() {
     const rng = mulberry32(2026);
 
@@ -837,6 +865,7 @@ function createStarField() {
         geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
         const material = new THREE.PointsMaterial({
+            map: getParticleTexture(),
             size,
             sizeAttenuation: false,
             vertexColors: true,
@@ -848,8 +877,8 @@ function createStarField() {
         scene.add(new THREE.Points(geometry, material));
     };
 
-    buildLayer(2600, 1.3, 0.85);
-    buildLayer(380, 2.3, 0.95);
+    buildLayer(2600, 1.7, 0.85);
+    buildLayer(380, 2.8, 0.95);
 }
 
 function createAsteroidBelt() {
@@ -860,7 +889,8 @@ function createAsteroidBelt() {
     const colors = [];
 
     for (let i = 0; i < count; i += 1) {
-        const radius = 103 + rng() * 14;
+        // Denser toward the middle of the belt, like the real one.
+        const radius = 103 + (rng() + rng()) * 7;
         const angle = rng() * TAU;
         positions.push(
             Math.cos(angle) * radius,
@@ -876,11 +906,12 @@ function createAsteroidBelt() {
     geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
     const material = new THREE.PointsMaterial({
-        size: 1.1,
+        map: getParticleTexture(),
+        size: 1.6,
         sizeAttenuation: true,
         vertexColors: true,
         transparent: true,
-        opacity: 0.85,
+        opacity: 0.9,
         depthWrite: false
     });
 
@@ -910,7 +941,7 @@ function createBodies() {
         };
 
         if (body.rings) {
-            addRings(mesh, body);
+            addRings(mesh, body, id);
         }
 
         if (body.hasClouds) {
@@ -953,7 +984,7 @@ function createBodyMaterial(id, body) {
     return material;
 }
 
-function addRings(mesh, body) {
+function addRings(mesh, body, id) {
     const inner = body.visualSize * body.rings.inner;
     const outer = body.visualSize * body.rings.outer;
     const geometry = new THREE.RingGeometry(inner, outer, 128, 1);
@@ -972,6 +1003,10 @@ function addRings(mesh, body) {
         transparent: true,
         depthWrite: false
     });
+
+    if (REAL_TEXTURES[id] && REAL_TEXTURES[id].ring) {
+        upgradeToRealTexture(material, REAL_TEXTURES[id].ring);
+    }
 
     const rings = new THREE.Mesh(geometry, material);
     rings.rotation.x = Math.PI / 2;
