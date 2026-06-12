@@ -16,6 +16,9 @@ const GLOBAL_CAMERA_POSITION = { x: 0, y: 145, z: 310 };
 const GLOBAL_TARGET_POSITION = { x: 0, y: 0, z: 0 };
 const ALIGNMENT_ANGLE = 0;
 const TOUR_STEP_DURATION = 8000;
+// Global pace of the simulation: the speed the slider shows as x1.
+// Body speeds were tuned for a faster pace, so this rescales them.
+const BASE_SIMULATION_SPEED = 0.25;
 const TAU = Math.PI * 2;
 
 const UI_TEXT = {
@@ -1123,7 +1126,7 @@ function setBodyPosition(id) {
 }
 
 function updateBodies(delta) {
-    const frameFactor = delta * 60 * simulationSpeed;
+    const frameFactor = delta * 60 * simulationSpeed * BASE_SIMULATION_SPEED;
 
     BODY_SEQUENCE.forEach((id) => {
         const object = bodyObjects[id];
